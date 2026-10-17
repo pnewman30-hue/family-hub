@@ -1,0 +1,1992 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F5F2EC">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Family Hub">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>Newman Family Hub</title>
+
+  <style>
+    /* Natural palette: warm beige ground, stone-gray panels, charcoal text */
+    :root {
+      color-scheme: light;
+      --bg-main: #ECE7DF;          /* beige ground */
+      --bg-bar: #F5F2EC;           /* header & footer */
+      --bg-column: #E3DDD3;        /* column wells */
+      --bg-surface: #FBF9F5;       /* cards, modals */
+      --bg-surface-elevated: #DDD6CA;
+      --bg-inset: #F1EDE6;         /* card description */
+      --border-color: #D4CCBF;
+      --border-light: #B9AF9F;
+      --text-primary: #2E2A25;     /* warm charcoal */
+      --text-secondary: #675F54;
+      --text-muted: #8F8678;
+      --accent: #4A443C;           /* primary buttons */
+      --accent-text: #FBF9F5;
+      --clock: #7A6650;
+
+      /* Child colors: Ella = Light Blue, Olivia = Maroon, Caleb = Navy, Family = Stone */
+      --ella-color: #5AA9D6;
+      --ella-bg: #E2EFF7;
+      --ella-text: #2A6A8F;
+      --olivia-color: #8A2B3F;
+      --olivia-bg: #F3E2E5;
+      --olivia-text: #7A2336;
+      --caleb-color: #25386B;
+      --caleb-bg: #E1E5EF;
+      --caleb-text: #25386B;
+      --family-color: #9A9185;
+      --family-bg: #EAE6DF;
+      --family-text: #57514A;
+
+      /* Section colors, muted: slate, sage, ochre */
+      --school-color: #5C6B8A;
+      --school-bg: #E5E8EF;
+      --school-text: #3E4B67;
+      --sports-color: #6A8866;
+      --sports-bg: #E3ECE1;
+      --sports-text: #43603F;
+      --social-color: #B08A4A;
+      --social-bg: #F3EADA;
+      --social-text: #7A5C2A;
+
+      /* States */
+      --urgent-color: #B4413A;
+      --urgent-bg: #F6E1DE;
+      --urgent-text: #983430;
+      --testing-color: #A7782E;
+      --testing-bg: #F4EBD8;
+      --testing-text: #7D591E;
+      --done-bg: #E3ECE1;
+      --done-border: #B7CAB2;
+      --done-text: #43603F;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    input, textarea, select {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Header Bar */
+    header {
+      background-color: var(--bg-bar);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      position: sticky;
+      top: env(safe-area-inset-top, 0px);
+      z-index: 50;
+      box-shadow: 0 2px 10px rgba(74, 68, 60, 0.08);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-title {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Top Nav Buttons (School, Sports, Social) */
+    .top-nav-sections {
+      display: flex;
+      background: var(--bg-column);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .nav-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      touch-action: manipulation;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      font-family: inherit;
+    }
+
+    .nav-btn.active { color: #FBF9F5; }
+    .nav-btn[data-section="all"].active { background: var(--accent); border-color: var(--accent); }
+    .nav-btn[data-section="school"].active { background: var(--school-color); border-color: var(--school-color); }
+    .nav-btn[data-section="sports"].active { background: var(--sports-color); border-color: var(--sports-color); }
+    .nav-btn[data-section="social"].active { background: var(--social-color); border-color: var(--social-color); }
+
+    .nav-count-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: rgba(46, 42, 37, 0.1);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .nav-btn.active .nav-count-badge { background: rgba(255, 255, 255, 0.22); }
+
+    .live-clock-section {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      background: var(--bg-surface);
+      padding: 5px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    #live-time {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--clock);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #live-date {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Controls Bar & Child Switcher */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .child-filter-group {
+      display: flex;
+      background: var(--bg-column);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .child-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      touch-action: manipulation;
+      font-family: inherit;
+    }
+
+    .child-btn.active { color: #FBF9F5; }
+    .child-btn[data-child="all"].active { background: var(--accent); border-color: var(--accent); }
+    .child-btn[data-child="ella"].active { background: var(--ella-color); border-color: var(--ella-color); }
+    .child-btn[data-child="olivia"].active { background: var(--olivia-color); border-color: var(--olivia-color); }
+    .child-btn[data-child="caleb"].active { background: var(--caleb-color); border-color: var(--caleb-color); }
+
+    .action-btn {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border-light);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      touch-action: manipulation;
+      font-family: inherit;
+    }
+
+    .action-btn:hover { background: var(--bg-surface-elevated); }
+
+    .action-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+    .action-btn.primary:hover { background: #38332D; }
+
+    .action-btn.danger {
+      background: var(--urgent-color);
+      border-color: var(--urgent-color);
+      color: #FBF9F5;
+    }
+
+    .action-btn.danger-text { color: var(--urgent-text); }
+
+    .icon-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* Sub-bar for Auto-Sort & Metrics */
+    .filter-subbar {
+      background: var(--bg-column);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .sort-indicator-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .sort-pill {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 3px 10px;
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .summary-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .metric-val {
+      font-weight: 800;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-val.alert { color: var(--urgent-color); }
+
+    .sync-status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+    }
+
+    /* Kanban Board Layout */
+    .board-container {
+      flex: 1;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+
+    /* Tall (portrait) or narrow screens: stack the columns, cards flow in a grid inside each */
+    @media (orientation: portrait), (max-width: 1100px) {
+      .board-container {
+        grid-template-columns: 1fr;
+      }
+      .kanban-column {
+        max-height: none !important;
+      }
+      .column-cards {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        min-height: 60px !important;
+      }
+      .column-cards:empty::after {
+        content: "Nothing here";
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header, .filter-subbar, footer { padding-left: 16px; padding-right: 16px; }
+      .top-nav-sections { flex-wrap: wrap; }
+      .nav-btn { padding: 8px 12px; }
+    }
+
+    .kanban-column {
+      background: var(--bg-column);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px);
+    }
+
+    .column-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .column-title {
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.2px;
+    }
+
+    .column-count {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .column-cards {
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 120px;
+      flex: 1;
+    }
+
+    /* Task Card */
+    .kanban-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 1px 3px rgba(74, 68, 60, 0.08);
+      position: relative;
+    }
+
+    /* Card left edge by child */
+    .kanban-card.child-ella { border-left: 6px solid var(--ella-color); }
+    .kanban-card.child-olivia { border-left: 6px solid var(--olivia-color); }
+    .kanban-card.child-caleb { border-left: 6px solid var(--caleb-color); }
+    .kanban-card.child-all { border-left: 6px solid var(--family-color); }
+
+    .kanban-card.is-overdue {
+      box-shadow: 0 0 0 1px var(--urgent-color), 0 1px 3px rgba(74, 68, 60, 0.08);
+    }
+
+    .card-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-child-ella { background: var(--ella-bg); color: var(--ella-text); border-color: var(--ella-color); }
+    .badge-child-olivia { background: var(--olivia-bg); color: var(--olivia-text); border-color: var(--olivia-color); }
+    .badge-child-caleb { background: var(--caleb-bg); color: var(--caleb-text); border-color: var(--caleb-color); }
+    .badge-child-all { background: var(--family-bg); color: var(--family-text); border-color: var(--family-color); }
+
+    .badge-section-school { background: var(--school-bg); color: var(--school-text); }
+    .badge-section-sports { background: var(--sports-bg); color: var(--sports-text); }
+    .badge-section-social { background: var(--social-bg); color: var(--social-text); }
+
+    .badge-urgent, .badge-overdue { background: var(--urgent-bg); color: var(--urgent-text); border-color: var(--urgent-color); }
+    .badge-testing { background: var(--testing-bg); color: var(--testing-text); border-color: var(--testing-color); }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text-primary);
+      text-wrap: balance;
+    }
+
+    .card-meta-line {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta-highlight {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+      background: var(--bg-inset);
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+
+    .card-date-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .due-date {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .due-date.urgent { color: var(--urgent-color); }
+
+    .due-date.no-date {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Touch actions */
+    .card-touch-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      gap: 6px;
+    }
+
+    .card-touch-actions button { white-space: nowrap; }
+
+    .btn-move, .btn-edit {
+      background: var(--bg-inset);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      font-family: inherit;
+    }
+
+    .btn-move { font-weight: 800; padding: 8px 14px; }
+
+    .btn-check {
+      background: var(--done-bg);
+      border: 1px solid var(--done-border);
+      color: var(--done-text);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      font-family: inherit;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(46, 42, 37, 0.45);
+      backdrop-filter: blur(3px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal-window {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 20px 40px -10px rgba(46, 42, 37, 0.35);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .modal-body {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    .modal-note {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .modal-note.small {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--border-light); }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal-footer {
+      padding: 16px 22px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-inset);
+    }
+
+    [hidden] { display: none !important; }
+
+    .action-btn.view-toggle.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+
+    /* Week Ahead view */
+    .week-container {
+      flex: 1;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(var(--kid-count, 3), minmax(0, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (orientation: portrait), (max-width: 1100px) {
+      .week-container { grid-template-columns: 1fr; }
+    }
+
+    .kid-week {
+      background: var(--bg-column);
+      border: 1px solid var(--border-color);
+      border-top: 6px solid var(--kid-color, var(--family-color));
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kid-week.kid-ella { --kid-color: var(--ella-color); }
+    .kid-week.kid-olivia { --kid-color: var(--olivia-color); }
+    .kid-week.kid-caleb { --kid-color: var(--caleb-color); }
+
+    .kid-week-header {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .kid-week-name {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .kid-week-school {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .kid-week-count {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kid-week-body {
+      padding: 10px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .day-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 8px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .day-block.is-today { border-color: var(--border-light); box-shadow: inset 3px 0 0 var(--kid-color, var(--family-color)); }
+    .day-block.is-weekend { background: var(--bg-inset); }
+
+    .day-block.attention {
+      border-color: var(--urgent-color);
+      background: var(--urgent-bg);
+    }
+
+    .day-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+    }
+
+    .day-block.attention .day-label { color: var(--urgent-text); }
+
+    .day-label .day-date {
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      color: var(--text-muted);
+    }
+
+    .day-empty {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .week-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      padding: 4px 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--text-primary);
+      touch-action: manipulation;
+    }
+
+    .week-item:hover { background: var(--bg-inset); }
+
+    .week-dot {
+      flex: 0 0 auto;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-top: 5px;
+      background: var(--school-color);
+    }
+
+    .week-dot.sports { background: var(--sports-color); }
+    .week-dot.social { background: var(--social-color); }
+
+    .week-item-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .week-item-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .week-item-meta {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .week-item.is-done .week-item-title {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .week-legend {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .week-legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+    .source-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .source-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-inset);
+      color: var(--text-primary);
+      font-weight: 700;
+      text-decoration: none;
+      touch-action: manipulation;
+    }
+
+    .source-link:hover { border-color: var(--border-light); }
+    .source-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .week-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .week-row .week-item { flex: 1; min-width: 0; }
+
+    .week-source {
+      flex: 0 0 auto;
+      margin-top: 4px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    /* Footer */
+    footer {
+      padding: 8px 24px;
+      background: var(--bg-bar);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+
+
+  <!-- Top Navigation Bar: Brand, Sections (School, Sports, Social), and Child Switcher -->
+  <header>
+    <div class="brand-section">
+      <div class="brand-title">
+        <span>🏠</span>
+        <span>Newman Family Hub</span>
+      </div>
+    </div>
+
+    <!-- PRIMARY TOP NAV BUTTONS: School, Sports, Social -->
+    <div class="top-nav-sections" id="section-nav">
+      <button class="nav-btn active" data-section="all">
+        <span>All</span>
+        <span class="nav-count-badge" id="count-all-sec">0</span>
+      </button>
+      <button class="nav-btn" data-section="school">
+        <span>📚 School</span>
+        <span class="nav-count-badge" id="count-school">0</span>
+      </button>
+      <button class="nav-btn" data-section="sports">
+        <span>⚽ Sports</span>
+        <span class="nav-count-badge" id="count-sports">0</span>
+      </button>
+      <button class="nav-btn" data-section="social">
+        <span>🎉 Social</span>
+        <span class="nav-count-badge" id="count-social">0</span>
+      </button>
+    </div>
+
+    <!-- Live Clock for Cozyla Display -->
+    <div class="live-clock-section">
+      <div id="live-time">1:00 PM</div>
+      <div id="live-date">Sunday, Sep 27, 2026</div>
+    </div>
+
+    <!-- Secondary Controls & Child Filter -->
+    <div class="controls-bar">
+      <div class="child-filter-group" id="child-filters">
+        <button class="child-btn active" data-child="all">All</button>
+        <button class="child-btn" data-child="ella">Ella</button>
+        <button class="child-btn" data-child="olivia">Olivia</button>
+        <button class="child-btn" data-child="caleb">Caleb</button>
+      </div>
+
+      <button class="action-btn view-toggle" id="btnViewToggle" onclick="toggleView()">📅 Week Ahead</button>
+      <button class="action-btn primary" onclick="openAddModal()">＋ Add Item</button>
+      <button class="action-btn" onclick="syncWithCloud(true)">↻ Sync</button>
+      <button class="action-btn" onclick="toggleFullScreen()">⛶ Kiosk</button>
+      <button class="action-btn" onclick="openSettingsModal()">⚙</button>
+    </div>
+  </header>
+
+  <!-- Filter Sub-bar: Auto-Sort Info & Live Counters -->
+  <div class="filter-subbar">
+    <div class="sort-indicator-group">
+      <span>Auto-Sorted By:</span>
+      <span class="sort-pill" id="currentSortLabel">Section & Soonest Date</span>
+    </div>
+
+    <div class="summary-metrics">
+      <div>Urgent: <span class="metric-val alert" id="metric-urgent">0</span></div>
+      <div>Overdue: <span class="metric-val alert" id="metric-overdue">0</span></div>
+      <div>Open Items: <span class="metric-val" id="metric-total">0</span></div>
+      <div class="sync-status-badge" id="syncBadge" onclick="openSettingsModal()">
+        ⚙ Setup Needed
+      </div>
+    </div>
+  </div>
+
+  <!-- Kanban Columns Grid -->
+  <main class="board-container">
+    <div class="kanban-column" id="col-inbox">
+      <div class="column-header">
+        <div class="column-title"><span>📬</span><span>Inbox / Digests</span></div>
+        <span class="column-count" id="count-col-inbox">0</span>
+      </div>
+      <div class="column-cards" data-status="inbox" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'inbox')"></div>
+    </div>
+
+    <div class="kanban-column" id="col-action">
+      <div class="column-header">
+        <div class="column-title"><span>⚡</span><span>Action Needed / This Week</span></div>
+        <span class="column-count" id="count-col-action">0</span>
+      </div>
+      <div class="column-cards" data-status="action" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'action')"></div>
+    </div>
+
+    <div class="kanban-column" id="col-progress">
+      <div class="column-header">
+        <div class="column-title"><span>⏳</span><span>In Progress / Study</span></div>
+        <span class="column-count" id="count-col-progress">0</span>
+      </div>
+      <div class="column-cards" data-status="progress" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'progress')"></div>
+    </div>
+
+    <div class="kanban-column" id="col-review">
+      <div class="column-header">
+        <div class="column-title"><span>🔍</span><span>Waiting / Grade Review</span></div>
+        <span class="column-count" id="count-col-review">0</span>
+      </div>
+      <div class="column-cards" data-status="review" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'review')"></div>
+    </div>
+
+    <div class="kanban-column" id="col-done">
+      <div class="column-header">
+        <div class="column-title"><span>✅</span><span>Completed / Done</span></div>
+        <span class="column-count" id="count-col-done">0</span>
+      </div>
+      <div class="column-cards" data-status="done" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'done')"></div>
+    </div>
+  </main>
+
+  <!-- Week Ahead: next 7 days per kid -->
+  <section class="week-container" id="weekView" hidden></section>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="cardModal">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Add Hub Item</div>
+        <button class="icon-close" onclick="closeModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editCardId">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Student</label>
+            <select class="form-select" id="cardChild">
+              <option value="ella">Ella (Light Blue)</option>
+              <option value="olivia">Olivia (Maroon)</option>
+              <option value="caleb">Caleb (Navy)</option>
+              <option value="all">Whole Family (Stone)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Top Section</label>
+            <select class="form-select" id="cardSection">
+              <option value="school">📚 School</option>
+              <option value="sports">⚽ Sports</option>
+              <option value="social">🎉 Social</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Title / Event</label>
+          <input type="text" class="form-input" id="cardTitleInput" placeholder="e.g. Reading Book Project or Academy Match">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Source / Team / Teacher</label>
+          <input type="text" class="form-input" id="cardTeacher" placeholder="e.g. Coach or Teacher Name">
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-select" id="cardCategory">
+              <option value="Homework">Homework & Packets</option>
+              <option value="Assessment">Exam / Testing</option>
+              <option value="Soccer">Soccer Match / Training</option>
+              <option value="Activity">Activity / School Event</option>
+              <option value="Social">Social / Festival / Party</option>
+              <option value="Admin">ParentVue & Forms</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select class="form-select" id="cardPriority">
+              <option value="normal">Normal</option>
+              <option value="urgent">Urgent</option>
+              <option value="testing">Testing Window</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="cardDueDate">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time (Optional)</label>
+            <input type="text" class="form-input" id="cardTime" placeholder="e.g. 5:30 PM">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status Column</label>
+            <select class="form-select" id="cardStatus">
+              <option value="inbox">Inbox</option>
+              <option value="action">Action Needed</option>
+              <option value="progress">In Progress</option>
+              <option value="review">Waiting Review</option>
+              <option value="done">Completed</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description / Instructions</label>
+          <textarea class="form-textarea" id="cardDesc"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn danger" id="btnDeleteCard" style="display:none;" onclick="deleteCurrentCard()">Delete</button>
+        <div style="margin-left:auto;display:flex;gap:10px;">
+          <button class="action-btn" onclick="closeModal()">Cancel</button>
+          <button class="action-btn primary" onclick="saveCard()">Save Item</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cloud Sync / Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">⚙ Cloud Sync Settings</div>
+        <button class="icon-close" onclick="closeSettingsModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="scriptFields">
+        <p class="modal-note">
+          The board loads live from the Newman Family Hub Google Sheet through its Apps Script web app. Changes made here are saved back to the sheet.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Google Apps Script Web App URL</label>
+          <input type="url" class="form-input" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Passcode (Optional)</label>
+          <input type="password" class="form-input" id="scriptKeyInput" placeholder="Must match HUB_KEY in the Apps Script settings">
+        </div>
+        </div>
+        <p class="modal-note small" id="syncStatusNote"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn danger-text" id="btnResetDefaults" onclick="resetToDefaultData()">Reset to Defaults</button>
+        <div style="margin-left:auto;display:flex;gap:10px;">
+          <button class="action-btn" onclick="closeSettingsModal()">Close</button>
+          <button class="action-btn primary" onclick="saveSettings()">Save & Connect</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div id="footerNote">Newman Family Hub • Live From the Family Sheet • Updates Every 2 Minutes</div>
+    <div id="lastSyncText">Not Synced Yet</div>
+  </footer>
+
+  <script>
+    const DEFAULT_CARDS = []; // no family data ships with the app
+
+    let cards = [];
+    let currentSection = "all";
+    let currentChildFilter = "all";
+    let syncTimer = null;
+    let syncInFlight = false;
+    let liveDb = null;          // shared database, when this view has it
+    let liveBoard = null;       // last board from the scheduled refreshes
+    let liveEdits = {};         // taps and edits from any display, by card id
+    const editChains = {};      // one write at a time per card
+    let lastLocalChange = 0;   // time of the last tap/edit on this display
+    let lastRenderedDay = "";
+
+    const SYNC_EVERY_MS = 2 * 60 * 1000; // live refresh from the Google Sheet
+    const DONE_KEEP_DAYS = 7;  // finished cards leave the board after this many days
+    const VALID_CHILDREN = ["ella", "olivia", "caleb", "all"];
+    const CHILD_NAMES = { ella: "Ella", olivia: "Olivia", caleb: "Caleb", all: "Family" };
+
+    // Browser storage can be unavailable on some kiosk setups; never let that break the board.
+    function storeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+    function storeSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+
+    let scriptAppUrl = storeGet("newman_school_script_url") || "";
+    let scriptKey = storeGet("newman_school_script_key") || "";
+    let currentView = storeGet("newman_hub_view") === "week" ? "week" : "board";
+
+    function startAutoSync() {
+      if (syncTimer) clearInterval(syncTimer);
+      syncTimer = scriptAppUrl ? setInterval(syncWithCloud, SYNC_EVERY_MS) : null;
+    }
+
+    function escapeHtml(val) {
+      return String(val == null ? "" : val)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function localDateString(d) {
+      const pad = n => String(n).padStart(2, "0");
+      return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    }
+
+    function todayStr() { return localDateString(new Date()); }
+
+    function parseDay(str) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(str || "");
+      return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+    }
+
+    function daysBetween(fromStr, toStr) {
+      const a = parseDay(fromStr), b = parseDay(toStr);
+      return (a && b) ? Math.round((b - a) / 86400000) : 0;
+    }
+
+    /* ---------- Aging rules ---------- */
+
+    // Games, practices, events and test days finish on their own; homework and forms do not.
+    function isEventCard(c) {
+      return c.section === "sports" || c.section === "social" || c.category === "Activity" || c.category === "Assessment";
+    }
+
+    function isRepeating(c) {
+      return Array.isArray(c.repeatDays) && c.repeatDays.length > 0;
+    }
+
+    // Does this card happen on the given yyyy-mm-dd day?
+    function occursOn(c, dayStr) {
+      if (!isRepeating(c)) return c.dueDate === dayStr;
+      if (c.dueDate && dayStr < c.dueDate) return false;
+      if (c.repeatUntil && dayStr > c.repeatUntil) return false;
+      const d = parseDay(dayStr);
+      return !!d && c.repeatDays.indexOf(d.getDay()) >= 0;
+    }
+
+    const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    function repeatLabel(c) {
+      const names = c.repeatDays.slice().sort().map(n => DAY_ABBR[n]);
+      return names.length > 1 ? names.slice(0, -1).join(", ") + " & " + names[names.length - 1] : names[0];
+    }
+
+    // Minutes after midnight for sorting ("5:30–6:45 PM" -> 1050); untimed items sort first
+    function timeKey(c) {
+      const m = /(\d{1,2})(?::(\d{2}))?\s*(?:[–-]\s*\d{1,2}(?::\d{2})?\s*)?(AM|PM)/i.exec(c.time || "");
+      if (!m) return -1;
+      let h = +m[1] % 12;
+      if (/pm/i.test(m[3])) h += 12;
+      return h * 60 + (+m[2] || 0);
+    }
+
+    function isOverdue(c) {
+      return c.status !== "done" && !isRepeating(c) && !!c.dueDate && c.dueDate < todayStr() && !isEventCard(c);
+    }
+
+    function isHiddenDone(c) {
+      if (c.status !== "done") return false;
+      const finished = c.doneDate || c.dueDate;
+      return !!finished && daysBetween(finished, todayStr()) > DONE_KEEP_DAYS;
+    }
+
+    function setStatus(card, status, doneOn) {
+      card.status = status;
+      if (status === "done") card.doneDate = card.doneDate || doneOn || todayStr();
+      else card.doneDate = "";
+    }
+
+    // Moves past games/practices/events to Done. Returns true if anything changed.
+    function autoAge() {
+      const today = todayStr();
+      let changed = false;
+      cards.forEach(c => {
+        const lastDay = isRepeating(c) ? c.repeatUntil : c.dueDate;
+        if (c.status !== "done" && lastDay && lastDay < today && isEventCard(c)) {
+          setStatus(c, "done", lastDay);
+          if (!liveDb) pushStatusToCloud(c.id, "done");
+          changed = true;
+        }
+      });
+      if (changed) saveToLocalStorage();
+      return changed;
+    }
+
+    function normalizeCards(list) {
+      list.forEach(c => {
+        if (VALID_CHILDREN.indexOf(c.child) < 0) c.child = "all";
+        if (!c.section) {
+          if (c.category === "Soccer") c.section = "sports";
+          else if (c.category === "Social" || (c.title && /Festival|Parade|Spirit Night|Homecoming/.test(c.title))) c.section = "social";
+          else c.section = "school";
+        }
+        if (c.doneDate == null) c.doneDate = "";
+      });
+      return list;
+    }
+
+    /* ---------- Startup ---------- */
+
+    function init() {
+      takeSetupLink();
+      let saved = null;
+      try { saved = JSON.parse(storeGet("newman_school_kanban_cards") || "null"); } catch (e) { saved = null; }
+      cards = Array.isArray(saved) ? saved : [];
+      normalizeCards(cards);
+
+      setupEventListeners();
+      applyView();
+      updateClock();
+      setInterval(updateClock, 1000);
+      renderBoard();
+      showLastSync();
+
+      if (scriptAppUrl) {
+        setSyncBadge(cards.length ? "🟡 Showing Saved Copy" : "🔄 Connecting...");
+        syncWithCloud();
+        startAutoSync();
+      } else {
+        setSyncBadge("⚙ Setup Needed");
+        openSettingsModal();
+      }
+
+      // Refresh the moment the screen wakes up or the network comes back
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) syncWithCloud(); });
+      window.addEventListener("online", () => syncWithCloud());
+      registerAppWorker();
+    }
+
+    // A setup link (?api=...&key=...) connects this display once, then is removed from the address bar
+    function takeSetupLink() {
+      try {
+        const params = new URLSearchParams(location.search);
+        const api = params.get("api");
+        if (api && /^https:\/\/script\.google(usercontent)?\.com\//.test(api)) {
+          scriptAppUrl = api;
+          scriptKey = params.get("key") || "";
+          storeSet("newman_school_script_url", scriptAppUrl);
+          storeSet("newman_school_script_key", scriptKey);
+        }
+        if (params.has("api") || params.has("key")) history.replaceState(null, "", location.pathname);
+      } catch (e) {}
+    }
+
+    function showLastSync() {
+      const at = Number(storeGet("newman_hub_last_sync") || 0);
+      document.getElementById("lastSyncText").textContent = at
+        ? "Last Synced: " + new Date(at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })
+        : "Not Synced Yet";
+    }
+
+    function registerAppWorker() {
+      if (!("serviceWorker" in navigator)) return;
+      navigator.serviceWorker.register("sw.js").catch(err => console.warn("App install support unavailable:", err));
+    }
+
+    // "2026-10-09-pm" -> "Cards Updated Fri, Oct 9 · Afternoon"
+    function refreshLabel(version) {
+      const m = /^(\d{4}-\d{2}-\d{2})-(am|pm)/.exec(version || "");
+      const day = m ? parseDay(m[1]) : null;
+      if (!day) return "Not Synced Yet";
+      return "Cards Updated " + day.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+        + " · " + (m[2] === "am" ? "Morning" : "Afternoon");
+    }
+
+    function saveToLocalStorage() {
+      storeSet("newman_school_kanban_cards", JSON.stringify(cards));
+    }
+
+    function setSyncBadge(text) {
+      document.getElementById("syncBadge").textContent = text;
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("live-time").textContent = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      document.getElementById("live-date").textContent = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+
+      // At midnight: age the board and refresh Today/Tomorrow labels
+      const day = todayStr();
+      if (lastRenderedDay && day !== lastRenderedDay) {
+        autoAge();
+        renderBoard();
+      }
+      lastRenderedDay = day;
+    }
+
+    function setupEventListeners() {
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentSection = btn.getAttribute("data-section");
+
+          const labelMap = {
+            all: "Section (School → Sports → Social) & Soonest Date",
+            school: "📚 School (Overdue, Urgent, Then Soonest)",
+            sports: "⚽ Sports (Matches & Practices)",
+            social: "🎉 Social (Events & Celebrations)"
+          };
+          document.getElementById("currentSortLabel").textContent = currentView === "week"
+            ? weekSortLabel()
+            : (labelMap[currentSection] || "Auto-Sorted");
+          renderBoard();
+        });
+      });
+
+      document.querySelectorAll(".child-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".child-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentChildFilter = btn.getAttribute("data-child");
+          renderBoard();
+        });
+      });
+    }
+
+    /* ---------- Moving cards ---------- */
+
+    const STATUS_FLOW = ["inbox", "action", "progress", "review", "done"];
+
+    function applyStatusChange(card, status) {
+      setStatus(card, status);
+      lastLocalChange = Date.now();
+      saveToLocalStorage();
+      renderBoard();
+      pushStatusToCloud(card.id, card.status);
+    }
+
+    function moveCard(id, direction, e) {
+      if (e) e.stopPropagation();
+      const card = cards.find(c => c.id === id);
+      if (!card) return;
+      const newIdx = STATUS_FLOW.indexOf(card.status) + direction;
+      if (newIdx >= 0 && newIdx < STATUS_FLOW.length) applyStatusChange(card, STATUS_FLOW[newIdx]);
+    }
+
+    function quickDone(id, e) {
+      if (e) e.stopPropagation();
+      const card = cards.find(c => c.id === id);
+      if (card) applyStatusChange(card, card.status === "done" ? "action" : "done");
+    }
+
+    /* ---------- Cloud sync ---------- */
+
+    function postToCloud(payload) {
+      if (!scriptAppUrl) return;
+      if (scriptKey) payload.key = scriptKey;
+      fetch(scriptAppUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      }).catch(err => console.log("Cloud sync push note:", err));
+    }
+
+    function pushStatusToCloud(cardId, newStatus) {
+      if (liveDb) {
+        const card = cards.find(c => c.id === cardId);
+        writeEdit(cardId, { status: newStatus, doneDate: card ? (card.doneDate || "") : "" });
+        return;
+      }
+      postToCloud({ action: "update_status", id: cardId, status: newStatus });
+    }
+
+    function pushCardToCloud(action, payload) {
+      if (liveDb) {
+        if (action === "delete_card") {
+          writeEdit(payload.id, { deleted: true });
+        } else if (payload.card) {
+          const c = payload.card;
+          const card = {};
+          ["child", "section", "title", "teacher", "category", "priority", "dueDate", "time", "desc", "school", "source"]
+            .forEach(k => { if (c[k] !== undefined) card[k] = c[k]; });
+          writeEdit(c.id, { card, status: c.status, doneDate: c.doneDate || "" });
+        }
+        return;
+      }
+      postToCloud(Object.assign({ action }, payload));
+    }
+
+    function syncWithCloud(fromButton) {
+      if (liveDb) { applyLive(); return; } // already live
+      if (!scriptAppUrl) {
+        if (fromButton === true) openSettingsModal();
+        return;
+      }
+      if (syncInFlight) return;
+      syncInFlight = true;
+      const startedAt = Date.now();
+      setSyncBadge("🔄 Syncing...");
+      const url = scriptAppUrl + (scriptKey ? (scriptAppUrl.indexOf("?") >= 0 ? "&" : "?") + "key=" + encodeURIComponent(scriptKey) : "");
+      fetch(url, { cache: "no-store" })
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.error) {
+            setSyncBadge(/passcode/i.test(data.error) ? "🔒 Passcode Needed" : "🟡 Sheet Error");
+            return;
+          }
+          if (!data || !Array.isArray(data.cards)) {
+            setSyncBadge("🟡 Offline Cache");
+            return;
+          }
+          // A tap in the last few seconds may not have reached the sheet yet; try again shortly
+          if (lastLocalChange > startedAt - 10000) {
+            setTimeout(syncWithCloud, 15000);
+            setSyncBadge("🟢 Live Cloud Sync");
+            return;
+          }
+          cards = normalizeCards(data.cards);
+          autoAge();
+          saveToLocalStorage();
+          renderBoard();
+          setSyncBadge("🟢 Live Cloud Sync");
+          storeSet("newman_hub_last_sync", String(Date.now()));
+          showLastSync();
+        })
+        .catch(err => {
+          console.warn("Cloud sync fallback:", err);
+          setSyncBadge(navigator.onLine === false ? "📴 Offline · Saved Copy" : "🟡 Sheet Unreachable");
+        })
+        .finally(() => { syncInFlight = false; });
+    }
+
+    /* ---------- Sorting & rendering ---------- */
+
+    function autoSortCards(cardList) {
+      const sectionPriority = { school: 1, sports: 2, social: 3 };
+      const rank = c => isOverdue(c) ? 0 : ({ urgent: 1, testing: 2, normal: 3 }[c.priority] || 3);
+
+      return cardList.sort((a, b) => {
+        if (a.status === "done" && b.status === "done") {
+          return (b.doneDate || "").localeCompare(a.doneDate || ""); // newest finished first
+        }
+        if (currentSection === "all") {
+          const secA = sectionPriority[a.section] || 99;
+          const secB = sectionPriority[b.section] || 99;
+          if (secA !== secB) return secA - secB;
+        }
+        const r = rank(a) - rank(b);
+        if (r !== 0) return r;
+        return (a.dueDate || "9999-99-99").localeCompare(b.dueDate || "9999-99-99");
+      });
+    }
+
+    function matchesChild(c) {
+      return currentChildFilter === "all" || c.child === currentChildFilter || c.child === "all";
+    }
+
+    function renderBoard() {
+      const onBoard = cards.filter(c => !isHiddenDone(c));
+      const forChild = onBoard.filter(matchesChild);
+      const filteredCards = forChild.filter(c => currentSection === "all" || c.section === currentSection);
+      const sortedCards = autoSortCards([...filteredCards]);
+
+      const columns = {
+        inbox: document.querySelector('#col-inbox .column-cards'),
+        action: document.querySelector('#col-action .column-cards'),
+        progress: document.querySelector('#col-progress .column-cards'),
+        review: document.querySelector('#col-review .column-cards'),
+        done: document.querySelector('#col-done .column-cards')
+      };
+      Object.keys(columns).forEach(status => { columns[status].innerHTML = ""; });
+
+      const counts = { inbox: 0, action: 0, progress: 0, review: 0, done: 0 };
+      sortedCards.forEach(card => {
+        const col = columns[card.status] ? card.status : "inbox";
+        counts[col]++;
+        columns[col].appendChild(createCardElement(card));
+      });
+
+      Object.keys(counts).forEach(k => { document.getElementById("count-col-" + k).textContent = counts[k]; });
+
+      // Section tabs count what's on the board for the selected child
+      document.getElementById("count-all-sec").textContent = forChild.length;
+      document.getElementById("count-school").textContent = forChild.filter(c => c.section === "school").length;
+      document.getElementById("count-sports").textContent = forChild.filter(c => c.section === "sports").length;
+      document.getElementById("count-social").textContent = forChild.filter(c => c.section === "social").length;
+
+      const open = filteredCards.filter(c => c.status !== "done");
+      document.getElementById("metric-urgent").textContent = open.filter(c => c.priority === "urgent" && !isOverdue(c)).length;
+      document.getElementById("metric-overdue").textContent = open.filter(isOverdue).length;
+      document.getElementById("metric-total").textContent = open.length;
+
+      if (currentView === "week") renderWeek();
+    }
+
+    /* ---------- Source links ---------- */
+
+    function sourceLinks(c) {
+      const found = String(c.sourceUrl || "").match(/https:\/\/[^\s)|\]]+/g) || [];
+      const links = found.map(url => ({ url, label: linkLabel(url) }));
+      if (!links.length) {
+        // No saved link: point to the likeliest place to find it
+        if (/calendar/i.test(c.source || "") && c.dueDate) {
+          links.push({ url: "https://calendar.google.com/calendar/r/day/" + c.dueDate.replace(/-/g, "/"), label: "Calendar" });
+        } else if (c.title) {
+          links.push({ url: "https://mail.google.com/mail/#search/" + encodeURIComponent(c.title).replace(/%20/g, "+"), label: "Search Gmail" });
+        }
+      }
+      return links;
+    }
+
+    function linkLabel(url) {
+      if (/mail\.google\.com/.test(url)) return /#search\//.test(url) ? "Search Gmail" : "Gmail";
+      if (/calendar/.test(url)) return "Calendar";
+      if (/playmetrics/.test(url)) return "PlayMetrics";
+      if (/teamsnap/.test(url)) return "TeamSnap";
+      if (/docs\.google\.com\/spreadsheets/.test(url)) return "Sheet";
+      try { return new URL(url).hostname.replace(/^www\./, ""); } catch (e) { return "Link"; }
+    }
+
+    function sourceLinksHtml(c) {
+      const links = sourceLinks(c);
+      if (!links.length) return "";
+      return `<div class="source-links"><span>Source:</span>${links.map(l =>
+        `<a class="source-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">↗ ${escapeHtml(l.label)}</a>`).join("")}</div>`;
+    }
+
+    /* ---------- Week Ahead ---------- */
+
+    // "School · Team" for each kid, read from the synced cards
+    function kidSubtitle(kid) {
+      const top = section => {
+        const tally = {};
+        cards.forEach(c => { if (c.child === kid && c.section === section && c.school) tally[c.school] = (tally[c.school] || 0) + 1; });
+        return Object.keys(tally).sort((a, b) => tally[b] - tally[a])[0] || "";
+      };
+      return [top("school"), top("sports")].filter(Boolean).join(" · ");
+    }
+    const SECTION_NAMES = { school: "School", sports: "Sports", social: "Social" };
+
+    function weekSortLabel() {
+      const sec = currentSection === "all" ? "School, Sports & Social" : SECTION_NAMES[currentSection];
+      return "Next 7 Days Per Kid · " + sec;
+    }
+
+    function applyView() {
+      const isWeek = currentView === "week";
+      document.querySelector(".board-container").hidden = isWeek;
+      document.getElementById("weekView").hidden = !isWeek;
+      const btn = document.getElementById("btnViewToggle");
+      btn.textContent = isWeek ? "▦ Board" : "📅 Week Ahead";
+      btn.classList.toggle("active", isWeek);
+      if (isWeek) {
+        document.getElementById("currentSortLabel").textContent = weekSortLabel();
+      } else {
+        document.querySelector('.nav-btn.active') && document.querySelector('.nav-btn.active').click();
+      }
+    }
+
+    function toggleView() {
+      currentView = currentView === "week" ? "board" : "week";
+      storeSet("newman_hub_view", currentView);
+      applyView();
+      renderBoard();
+    }
+
+    function weekItemHtml(c) {
+      const who = c.child === "all" ? '<span class="badge badge-child-all">Family</span>' : "";
+      const flag = isOverdue(c) ? '<span class="badge badge-overdue">OVERDUE</span>'
+        : (c.status !== "done" && c.priority === "urgent") ? '<span class="badge badge-urgent">URGENT</span>'
+        : (c.status !== "done" && c.priority === "testing") ? '<span class="badge badge-testing">TESTING</span>' : "";
+      const source = c.teacher || c.school || "";
+      const link = sourceLinks(c)[0];
+      return `
+        <div class="week-row">
+        <button class="week-item${c.status === "done" ? " is-done" : ""}" data-id="${escapeHtml(c.id)}" onclick="openEditModal(this.dataset.id)">
+          <span class="week-dot ${escapeHtml(c.section)}"></span>
+          <span class="week-item-text">
+            <span class="week-item-title">${escapeHtml(c.title)}</span>
+            <span class="week-item-meta">${c.time ? `<strong>${escapeHtml(c.time)}</strong>` : ""}${who}${flag}<span>${escapeHtml(SECTION_NAMES[c.section] || "")}${source ? " · " + escapeHtml(source) : ""}</span></span>
+          </span>
+        </button>
+        ${link ? `<a class="week-source" href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" title="Open source: ${escapeHtml(link.label)}" aria-label="Open source: ${escapeHtml(link.label)}">↗</a>` : ""}
+        </div>`;
+    }
+
+    function sortForDay(list) {
+      const secOrder = { school: 1, sports: 2, social: 3 };
+      const rank = c => c.status === "done" ? 9 : ({ urgent: 1, testing: 2, normal: 3 }[c.priority] || 3);
+      return list.sort((a, b) => (timeKey(a) - timeKey(b)) || (rank(a) - rank(b)) || ((secOrder[a.section] || 9) - (secOrder[b.section] || 9)));
+    }
+
+    function renderWeek() {
+      const wrap = document.getElementById("weekView");
+      const kids = currentChildFilter === "all" ? ["ella", "olivia", "caleb"] : [currentChildFilter];
+      wrap.style.setProperty("--kid-count", kids.length);
+
+      const base = new Date();
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+        days.push({
+          str: localDateString(d),
+          name: i === 0 ? "Today" : i === 1 ? "Tomorrow" : d.toLocaleDateString([], { weekday: "long" }),
+          date: d.toLocaleDateString([], { weekday: i < 2 ? "short" : undefined, month: "short", day: "numeric" }),
+          weekend: d.getDay() === 0 || d.getDay() === 6,
+          today: i === 0
+        });
+      }
+      const lastDay = days[6].str;
+
+      wrap.innerHTML = kids.map(kid => {
+        const items = cards.filter(c =>
+          (c.child === kid || c.child === "all") &&
+          (currentSection === "all" || c.section === currentSection) &&
+          !isHiddenDone(c));
+
+        const overdue = sortForDay(items.filter(isOverdue));
+        const undated = sortForDay(items.filter(c => !c.dueDate && c.status !== "done"));
+        const inWeek = items.filter(c => days.some(d => occursOn(c, d.str)));
+        const openCount = days.reduce((n, d) => n + inWeek.filter(c => c.status !== "done" && occursOn(c, d.str)).length, 0);
+
+        const blocks = [];
+        if (overdue.length) {
+          blocks.push(`<div class="day-block attention"><div class="day-label"><span>Overdue</span><span class="day-date">${overdue.length} to clear</span></div>${overdue.map(weekItemHtml).join("")}</div>`);
+        }
+        days.forEach(day => {
+          const list = sortForDay(inWeek.filter(c => occursOn(c, day.str)));
+          blocks.push(`
+            <div class="day-block${day.today ? " is-today" : ""}${day.weekend ? " is-weekend" : ""}">
+              <div class="day-label"><span>${escapeHtml(day.name)}</span><span class="day-date">${escapeHtml(day.date)}</span></div>
+              ${list.length ? list.map(weekItemHtml).join("") : '<div class="day-empty">Nothing scheduled</div>'}
+            </div>`);
+        });
+        if (undated.length) {
+          blocks.push(`<div class="day-block"><div class="day-label"><span>No Date Set</span><span class="day-date">${undated.length}</span></div>${undated.map(weekItemHtml).join("")}</div>`);
+        }
+
+        return `
+          <div class="kid-week kid-${kid}">
+            <div class="kid-week-header">
+              <div>
+                <div class="kid-week-name">${escapeHtml(CHILD_NAMES[kid])}</div>
+                <div class="kid-week-school">${escapeHtml(kidSubtitle(kid))}</div>
+              </div>
+              <div class="kid-week-count">${openCount} on the calendar</div>
+            </div>
+            <div class="kid-week-body">${blocks.join("")}</div>
+          </div>`;
+      }).join("");
+    }
+
+    function friendlyDate(str) {
+      if (!str) return "";
+      const diff = daysBetween(todayStr(), str);
+      if (diff === 0) return "Today";
+      if (diff === 1) return "Tomorrow";
+      if (diff === -1) return "Yesterday";
+      const d = parseDay(str);
+      return d ? d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) : str;
+    }
+
+    function createCardElement(card) {
+      const overdue = isOverdue(card);
+      const div = document.createElement("div");
+      div.className = `kanban-card child-${card.child}${overdue ? " is-overdue" : ""}`;
+      div.setAttribute("draggable", "true");
+      div.setAttribute("data-id", card.id);
+      div.ondragstart = (e) => handleDragStart(e, card.id);
+
+      const statusIdx = STATUS_FLOW.indexOf(card.status);
+      const sectionIcons = { school: "📚 School", sports: "⚽ Sports", social: "🎉 Social" };
+      const dateLabel = card.section === "school" ? "Due" : "When";
+
+      let dateHtml;
+      if (card.status === "done") {
+        dateHtml = `<span>✅ Finished${card.doneDate ? ": " + escapeHtml(friendlyDate(card.doneDate)) : ""}</span>`;
+      } else if (isRepeating(card)) {
+        dateHtml = `<span>🔁 Every ${escapeHtml(repeatLabel(card))}${card.time ? " · " + escapeHtml(card.time) : ""}</span>`;
+      } else if (!card.dueDate) {
+        dateHtml = `<span>🗓 No Date Set</span>`;
+      } else {
+        dateHtml = `<span>🗓 ${dateLabel}: ${escapeHtml(friendlyDate(card.dueDate))}${card.time ? " · " + escapeHtml(card.time) : ""}</span>`;
+      }
+      const dateClass = (!card.dueDate && card.status !== "done") ? "no-date" : ((overdue || card.priority === "urgent") && card.status !== "done" ? "urgent" : "");
+
+      div.innerHTML = `
+        <div class="card-top-row">
+          <div class="card-badges">
+            <span class="badge badge-child-${card.child}">${escapeHtml(CHILD_NAMES[card.child] || card.child)}</span>
+            <span class="badge badge-section-${card.section || 'school'}">${escapeHtml(sectionIcons[card.section] || card.section)}</span>
+            ${overdue ? '<span class="badge badge-overdue">OVERDUE</span>' : ''}
+            ${!overdue && card.priority === 'urgent' && card.status !== 'done' ? '<span class="badge badge-urgent">URGENT</span>' : ''}
+            ${card.priority === 'testing' && card.status !== 'done' ? '<span class="badge badge-testing">TESTING</span>' : ''}
+          </div>
+        </div>
+
+        <div class="card-title">${escapeHtml(card.title)}</div>
+
+        <div class="card-meta-line">
+          <span>${card.section === 'sports' ? '🏟️' : (card.section === 'social' ? '🎈' : '👤')}</span>
+          <span class="meta-highlight">${escapeHtml(card.teacher || card.school || 'Event')}</span>
+        </div>
+
+        ${card.desc ? `<div class="card-desc">${escapeHtml(card.desc)}</div>` : ''}
+
+        <div class="card-date-row">
+          <div class="due-date ${dateClass}">${dateHtml}</div>
+        </div>
+
+        ${sourceLinksHtml(card)}
+
+        <div class="card-touch-actions">
+          <button class="btn-move" onclick="moveCard(this.closest('.kanban-card').dataset.id, -1, event)" ${statusIdx === 0 ? 'disabled style="opacity:0.2;"' : ''} title="Move left">←</button>
+          <button class="btn-check" onclick="quickDone(this.closest('.kanban-card').dataset.id, event)" title="Toggle completed">
+            ${card.status === 'done' ? '↺ Reopen' : '✓ Done'}
+          </button>
+          <button class="btn-edit" onclick="openEditModal(this.closest('.kanban-card').dataset.id)" title="Edit">✎ Edit</button>
+          <button class="btn-move" onclick="moveCard(this.closest('.kanban-card').dataset.id, 1, event)" ${statusIdx === STATUS_FLOW.length - 1 ? 'disabled style="opacity:0.2;"' : ''} title="Move right">→</button>
+        </div>
+      `;
+      return div;
+    }
+
+    /* ---------- Drag & drop (mouse; touch screens use the arrow buttons) ---------- */
+
+    let draggedCardId = null;
+    function handleDragStart(e, id) {
+      draggedCardId = id;
+      e.dataTransfer.setData("text/plain", id);
+    }
+    function allowDrop(e) {
+      e.preventDefault();
+    }
+    function handleDrop(e, targetStatus) {
+      e.preventDefault();
+      const id = e.dataTransfer.getData("text/plain") || draggedCardId;
+      const card = cards.find(c => c.id === id);
+      if (card && card.status !== targetStatus) applyStatusChange(card, targetStatus);
+    }
+
+    /* ---------- Add / edit ---------- */
+
+    function openAddModal() {
+      document.getElementById("modalTitle").textContent = "Add Hub Item";
+      document.getElementById("editCardId").value = "";
+      document.getElementById("cardChild").value = currentChildFilter !== "all" ? currentChildFilter : "ella";
+      document.getElementById("cardSection").value = currentSection !== "all" ? currentSection : "school";
+      document.getElementById("cardTitleInput").value = "";
+      document.getElementById("cardTeacher").value = "";
+      document.getElementById("cardCategory").value = "Homework";
+      document.getElementById("cardPriority").value = "normal";
+      document.getElementById("cardDueDate").value = todayStr();
+      document.getElementById("cardTime").value = "";
+      document.getElementById("cardStatus").value = "action";
+      document.getElementById("cardDesc").value = "";
+      document.getElementById("btnDeleteCard").style.display = "none";
+      document.getElementById("cardModal").classList.add("open");
+    }
+
+    function openEditModal(id) {
+      const card = cards.find(c => c.id === id);
+      if (!card) return;
+      document.getElementById("modalTitle").textContent = "Edit Hub Item";
+      document.getElementById("editCardId").value = card.id;
+      document.getElementById("cardChild").value = card.child;
+      document.getElementById("cardSection").value = card.section || "school";
+      document.getElementById("cardTitleInput").value = card.title;
+      document.getElementById("cardTeacher").value = card.teacher || "";
+      document.getElementById("cardCategory").value = card.category;
+      if (!document.getElementById("cardCategory").value) document.getElementById("cardCategory").value = "Activity";
+      document.getElementById("cardPriority").value = card.priority || "normal";
+      document.getElementById("cardDueDate").value = card.dueDate || "";
+      document.getElementById("cardTime").value = card.time || "";
+      document.getElementById("cardStatus").value = card.status;
+      document.getElementById("cardDesc").value = card.desc || "";
+      document.getElementById("btnDeleteCard").style.display = "block";
+      document.getElementById("cardModal").classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("cardModal").classList.remove("open");
+    }
+
+    function saveCard() {
+      const id = document.getElementById("editCardId").value;
+      const title = document.getElementById("cardTitleInput").value.trim();
+      if (!title) {
+        const input = document.getElementById("cardTitleInput");
+        input.style.borderColor = "var(--urgent-color)";
+        input.placeholder = "A title is required";
+        input.focus();
+        return;
+      }
+      document.getElementById("cardTitleInput").style.borderColor = "";
+      const fields = {
+        child: document.getElementById("cardChild").value,
+        section: document.getElementById("cardSection").value,
+        title,
+        teacher: document.getElementById("cardTeacher").value.trim(),
+        category: document.getElementById("cardCategory").value,
+        priority: document.getElementById("cardPriority").value,
+        dueDate: document.getElementById("cardDueDate").value,
+        time: document.getElementById("cardTime").value.trim(),
+        desc: document.getElementById("cardDesc").value.trim()
+      };
+      const status = document.getElementById("cardStatus").value;
+
+      let savedCard = id ? cards.find(c => c.id === id) : null;
+      if (savedCard) {
+        Object.assign(savedCard, fields);
+      } else {
+        savedCard = Object.assign({ id: "CUSTOM-" + Date.now(), doneDate: "" }, fields);
+        cards.unshift(savedCard);
+      }
+      setStatus(savedCard, status);
+      lastLocalChange = Date.now();
+
+      pushCardToCloud("upsert_card", { card: savedCard });
+      saveToLocalStorage();
+      renderBoard();
+      closeModal();
+    }
+
+    function deleteCurrentCard() {
+      const id = document.getElementById("editCardId").value;
+      if (!id || !confirmByDoubleTap(document.getElementById("btnDeleteCard"), "Delete", "Tap Again to Delete")) return;
+      {
+        cards = cards.filter(c => c.id !== id);
+        lastLocalChange = Date.now();
+        pushCardToCloud("delete_card", { id });
+        saveToLocalStorage();
+        renderBoard();
+        closeModal();
+      }
+    }
+
+    /* ---------- Settings ---------- */
+
+    // Two-tap confirmation (pop-up dialogs are blocked on some displays)
+    function confirmByDoubleTap(btn, label, armedLabel) {
+      if (btn.dataset.armed === "1") {
+        btn.dataset.armed = "";
+        btn.textContent = label;
+        return true;
+      }
+      btn.dataset.armed = "1";
+      btn.textContent = armedLabel;
+      setTimeout(() => { btn.dataset.armed = ""; btn.textContent = label; }, 4000);
+      return false;
+    }
+
+    function openSettingsModal() {
+      document.getElementById("scriptFields").style.display = liveDb ? "none" : "";
+      document.getElementById("scriptUrlInput").value = scriptAppUrl;
+      document.getElementById("scriptKeyInput").value = scriptKey;
+      document.getElementById("btnResetDefaults").style.display = "none";
+      document.getElementById("syncStatusNote").textContent = liveDb
+        ? "Live. New school and sports items arrive automatically at 6 a.m. and 2 p.m. Taps and edits show on every screen right away and are copied into the Google Sheet at the next refresh."
+        : scriptAppUrl
+        ? "Connected. The board reloads from the Google Sheet every 2 minutes and whenever the screen wakes."
+        : "Enter the web app address from the Apps Script deployment to load the family board.";
+      document.getElementById("settingsModal").classList.add("open");
+    }
+
+    function closeSettingsModal() {
+      document.getElementById("settingsModal").classList.remove("open");
+    }
+
+    function saveSettings() {
+      scriptAppUrl = document.getElementById("scriptUrlInput").value.trim();
+      scriptKey = document.getElementById("scriptKeyInput").value.trim();
+      storeSet("newman_school_script_url", scriptAppUrl);
+      storeSet("newman_school_script_key", scriptKey);
+      closeSettingsModal();
+      if (scriptAppUrl) {
+        setSyncBadge("🟢 Live Cloud Sync");
+        syncWithCloud();
+      } else {
+        setSyncBadge("⚙ Setup Needed");
+      }
+      startAutoSync();
+    }
+
+    function resetToDefaultData() {
+      if (scriptAppUrl || !DEFAULT_CARDS.length) return; // the Google Sheet is the master copy
+      if (confirmByDoubleTap(document.getElementById("btnResetDefaults"), "Reset to Defaults", "Tap Again to Reset")) {
+        cards = normalizeCards(JSON.parse(JSON.stringify(DEFAULT_CARDS)));
+        autoAge();
+        saveToLocalStorage();
+        renderBoard();
+        closeSettingsModal();
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
