@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F3ECDD">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ella School">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="../icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <title>Ella's School Dashboard</title>
+<style>
+/* Layout: one calm column — header and tally, the fall six-weeks strip, classes with grade weights,
+   what needs attention, what's coming up, then every assignment with working filters. */
+:root {
+  --bg: #F3ECDD;
+  --surface: #FFFCF6;
+  --ink: #15202B;
+  --muted: #6A6152;
+  --line: #E2D7C3;
+  --track: #ECE3D2;
+  --accent: #1D4F9C;
+  --accent-soft: #E5EDF8;
+  --pencil: #F4C430;
+  --on-pencil: #1B1B1B;
+  --good: #1B7A4A;
+  --good-soft: #E2F2E9;
+  --warn: #965900;
+  --warn-soft: #FAEFDC;
+  --bad: #B42318;
+  --bad-soft: #FBE6E4;
+  --font-ui: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --step--1: 0.8125rem;
+  --step-0: 0.9375rem;
+  --step-1: 1.125rem;
+  --step-2: 1.5rem;
+  --step-3: 2.25rem;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: var(--step-0); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: max(16px, 4vw); padding-block: 28px 56px; display: grid; gap: 36px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: var(--step-3); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: var(--step-1); font-weight: 700; }
+p { margin: 0; }
+.eyebrow { font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+.updated { margin-top: 8px; color: var(--muted); font-size: var(--step--1); }
+.tally { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.tally span { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 11px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
+.tally b { font-variant-numeric: tabular-nums; font-size: var(--step-0); color: var(--ink); }
+.tally .bad b { color: var(--bad); }
+.tally .up b { color: var(--accent); }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.aside { color: var(--muted); font-size: var(--step--1); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.note { color: var(--muted); font-size: var(--step--1); margin-top: 10px; max-width: 65ch; }
+.empty { padding: 18px 16px; color: var(--muted); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* six-weeks strip */
+.strip { position: relative; height: 86px; margin-top: 4px; }
+.seg { position: absolute; top: 24px; height: 26px; border-radius: 6px; background: var(--track); border: 1px solid var(--line); }
+.seg.now { background: var(--accent-soft); border-color: var(--accent); }
+.seg-label { position: absolute; top: 56px; font-size: 12px; line-height: 1.3; color: var(--muted); padding-left: 2px; white-space: nowrap; }
+.seg-label b { display: block; color: var(--ink); font-weight: 600; }
+.off { position: absolute; top: 31px; width: 2px; height: 12px; border-radius: 1px; background: var(--muted); opacity: 0.45; }
+.today { position: absolute; top: 16px; height: 42px; border-left: 2px solid var(--ink); }
+.today span { position: absolute; top: -18px; left: 0; transform: translateX(-50%); background: var(--pencil); color: var(--on-pencil); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 4px; white-space: nowrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.legend i { display: inline-block; width: 2px; height: 10px; background: var(--muted); opacity: 0.6; margin-right: 6px; vertical-align: -1px; }
+
+/* classes */
+.classes { list-style: none; margin: 0; padding: 0; }
+.classes > li + li { border-top: 1px solid var(--line); }
+.crow, .classes summary { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; }
+.classes summary { cursor: pointer; list-style: none; }
+.classes summary::-webkit-details-marker { display: none; }
+.classes summary:hover { background: var(--accent-soft); }
+.per { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); font-size: var(--step--1); }
+.cname { min-width: 0; }
+.cname strong { display: block; font-weight: 600; }
+.cname small { display: block; color: var(--muted); font-size: var(--step--1); overflow-wrap: anywhere; }
+.plain .crow { color: var(--muted); }
+.plain .cname strong { font-weight: 500; }
+.gradebox { display: flex; align-items: center; gap: 12px; }
+.bar { position: relative; width: 96px; height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: currentColor; }
+.bar u { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--surface); opacity: 0.9; }
+.grade { font-size: var(--step-2); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2.2ch; text-align: right; line-height: 1; }
+.grade.none { font-size: var(--step-0); font-weight: 500; color: var(--muted); }
+.g-a { color: var(--good); } .g-b { color: var(--accent); } .g-c { color: var(--warn); } .g-f { color: var(--bad); }
+.chev { width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translateY(-2px); transition: transform 0.15s; }
+details[open] .chev { transform: rotate(225deg) translateY(-2px); }
+.cbody { padding: 2px 16px 16px 62px; display: grid; gap: 14px; }
+.cbody h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+.weights { display: grid; gap: 7px; }
+.w { display: grid; grid-template-columns: minmax(0, 1fr) 42px 110px; gap: 10px; align-items: center; font-size: var(--step--1); }
+.w .wt { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.w .mk { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.w .mk .bar { width: 64px; }
+.w .mk.none { color: var(--muted); font-weight: 400; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: var(--step--1); }
+.facts div span { display: block; color: var(--muted); font-size: 12px; }
+.facts b { font-variant-numeric: tabular-nums; }
+.contact { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: var(--step--1); }
+.email { user-select: all; overflow-wrap: anywhere; }
+.btn { font-size: var(--step--1); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* attention + upcoming rows */
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows li { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 11px 16px; }
+.rows li + li { border-top: 1px solid var(--line); }
+.rows .what { min-width: 0; }
+.rows .what strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.rows .what small { display: block; color: var(--muted); font-size: var(--step--1); }
+.rows .what small.src { font-size: 12px; margin-top: 2px; }
+.rows .when { font-size: var(--step--1); color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; line-height: 1.5; }
+.chip.zero { background: var(--bad-soft); color: var(--bad); }
+.chip.low { background: var(--warn-soft); color: var(--warn); }
+.chip.notgraded, .chip.nfg { background: var(--track); color: var(--muted); }
+.chip.upcoming { background: var(--pencil); color: var(--on-pencil); }
+
+/* all assignments */
+.filters { display: grid; gap: 10px; margin-bottom: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { font-size: var(--step--1); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.chips button:hover { border-color: var(--accent); }
+.chips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chips .n { font-variant-numeric: tabular-nums; opacity: 0.7; margin-left: 5px; }
+.searchrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.searchrow input { flex: 1 1 220px; min-width: 0; font: inherit; font-size: var(--step-0); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.count { color: var(--muted); font-size: var(--step--1); margin-bottom: 8px; }
+.ahead, .arow { display: grid; grid-template-columns: 64px 150px minmax(0, 1fr) 170px 110px; gap: 12px; align-items: center; padding: 10px 16px; }
+.ahead { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); }
+.ahead button { all: unset; cursor: pointer; }
+.ahead button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.arow + .arow { border-top: 1px solid var(--line); }
+.a-due { font-variant-numeric: tabular-nums; color: var(--muted); font-size: var(--step--1); }
+.a-cls { font-size: var(--step--1); min-width: 0; }
+.a-name { min-width: 0; }
+.a-name strong { font-weight: 600; overflow-wrap: anywhere; }
+.a-name small { display: block; color: var(--muted); font-size: 12px; }
+.a-type { color: var(--muted); font-size: var(--step--1); min-width: 0; overflow-wrap: anywhere; }
+.a-score { text-align: right; font-variant-numeric: tabular-nums; }
+.a-score b { display: block; font-weight: 700; }
+.a-score small { color: var(--muted); font-size: 12px; }
+.p-a { color: var(--good); } .p-b { color: var(--ink); } .p-c { color: var(--warn); } .p-f { color: var(--bad); }
+.foot { color: var(--muted); font-size: var(--step--1); display: grid; gap: 4px; }
+.status { padding: 22px 16px; color: var(--muted); }
+.status strong { display: block; color: var(--ink); font-size: var(--step-1); margin-bottom: 4px; }
+
+@media (max-width: 760px) {
+  .ahead { display: none; }
+  .arow { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "meta score" "name score" "type type"; gap: 2px 12px; }
+  .a-due, .a-cls { grid-area: meta; }
+  .a-due { display: none; }
+  .a-cls::before { content: attr(data-due) " · "; color: var(--muted); }
+  .a-cls { color: var(--muted); }
+  .a-name { grid-area: name; }
+  .a-type { grid-area: type; font-size: 12px; }
+  .a-score { grid-area: score; align-self: center; }
+  .cbody { padding-left: 16px; }
+  .rows li { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "when chip" "what chip"; gap: 2px 12px; }
+  .rows .when { grid-area: when; }
+  .rows .what { grid-area: what; }
+  .rows .chip { grid-area: chip; }
+}
+@media (max-width: 460px) {
+  .bar.big { display: none; }
+  h1 { font-size: 1.85rem; }
+  .w { grid-template-columns: minmax(0, 1fr) 38px 92px; }
+  .w .mk .bar { width: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow" id="eyebrow">Lassiter High School · Fall Semester</p>
+    <h1>Ella's School Dashboard</h1>
+    <p class="updated" id="updated">Loading Ella's classes…</p>
+    <div class="tally" id="tally" aria-live="polite"></div>
+  </header>
+
+  <section aria-labelledby="h-term">
+    <div class="sec-head"><h2 id="h-term">Grading Periods</h2><span class="aside" id="term-aside"></span></div>
+    <div class="strip" id="strip" role="img" aria-label="Fall semester grading periods"></div>
+    <div class="legend" id="legend" hidden><span><i></i>No-school day</span></div>
+  </section>
+
+  <section aria-labelledby="h-classes">
+    <div class="sec-head"><h2 id="h-classes">Classes</h2><span class="aside">Semester-to-date grades. Tap a class for its grade weights and teacher.</span></div>
+    <div class="panel">
+      <ol class="classes" id="classes">
+        <li class="status"><strong>Loading classes</strong>Ella's schedule, teachers and grades appear here once the data loads.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-att">
+    <div class="sec-head"><h2 id="h-att">Needs Attention</h2><span class="aside">Zeros, ungraded past work and grade categories under 70</span></div>
+    <div class="panel"><ul class="rows" id="attention"><li class="status">Nothing to show yet.</li></ul></div>
+  </section>
+
+  <section aria-labelledby="h-up">
+    <div class="sec-head"><h2 id="h-up">Coming Up</h2><span class="aside">Tests, quizzes and work due from today on</span></div>
+    <div class="panel"><ul class="rows" id="upcoming"><li class="status">Nothing to show yet.</li></ul></div>
+    <p class="note" id="up-note">Dates come from the ParentVUE gradebook, the CTLS class calendars and teachers' CTLS class posts. Teachers can move dates, so CTLS has the final word.</p>
+  </section>
+
+  <section aria-labelledby="h-all" id="all">
+    <div class="sec-head"><h2 id="h-all">All Assignments</h2><span class="aside" id="all-aside"></span></div>
+    <div class="filters">
+      <div class="chips" id="f-class" role="group" aria-label="Filter by class"></div>
+      <div class="chips" id="f-status" role="group" aria-label="Filter by status"></div>
+      <div class="searchrow">
+        <input type="search" id="f-q" placeholder="Search assignments, types or notes" aria-label="Search assignments">
+        <button class="btn" id="f-sort" type="button">Newest First</button>
+        <button class="btn" id="f-clear" type="button">Clear Filters</button>
+      </div>
+    </div>
+    <p class="count" id="count"></p>
+    <div class="panel" id="list-panel">
+      <div class="ahead" aria-hidden="true"><span>Due</span><span>Class</span><span>Assignment</span><span>Category</span><span style="text-align:right">Score</span></div>
+      <div id="list"><div class="status">Assignments appear here once the data loads.</div></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p id="foot-source">Source: ParentVUE gradebook for Lassiter High School.</p>
+    <p>Grades are semester-to-date averages, the same figures ParentVUE shows. Scores show points earned out of points possible.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (s) { return document.querySelector(s); };
+  var STORE_KEY = "ella-tracker-filters-v1";
+  var STATUS = [
+    { key: "all", label: "All" },
+    { key: "zero", label: "Zeros" },
+    { key: "notgraded", label: "Not Graded" },
+    { key: "upcoming", label: "Coming Up" },
+    { key: "graded", label: "Graded" }
+  ];
+  var state = { meta: null, classes: null, ctls: null, cls: "all", status: "all", q: "", sort: "desc" };
+  try {
+    var saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+    ["cls", "status", "sort"].forEach(function (k) { if (typeof saved[k] === "string") state[k] = saved[k]; });
+  } catch (e) { /* storage unavailable: defaults are fine */ }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ cls: state.cls, status: state.status, sort: state.sort })); } catch (e) {}
+  }
+
+  function h(tag, attrs) {
+    var el = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (v == null || v === false) return;
+      if (k === "text") el.textContent = v;
+      else if (k === "on") Object.keys(v).forEach(function (ev) { el.addEventListener(ev, v[ev]); });
+      else el.setAttribute(k, v === true ? "" : String(v));
+    });
+    for (var i = 2; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null || c === false) continue;
+      if (Array.isArray(c)) c.forEach(function (x) { if (x != null && x !== false) el.append(x); });
+      else el.append(c);
+    }
+    return el;
+  }
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function todayISO() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function toDate(iso) { var p = String(iso).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function fmt(iso, opts) {
+    if (!iso) return "No date";
+    return toDate(iso).toLocaleDateString("en-US", opts || { month: "short", day: "numeric" });
+  }
+  function days(a, b) { return Math.round((toDate(b) - toDate(a)) / 86400000); }
+  function band(n) { n = Number(n); if (!isFinite(n)) return "none"; if (n >= 90) return "a"; if (n >= 80) return "b"; if (n >= 70) return "c"; return "f"; }
+  function clamp(n) { n = Number(n); return isFinite(n) ? Math.max(0, Math.min(100, n)) : 0; }
+  function statusOf(a, today) {
+    if (a.status === "nfg") return "nfg";
+    if (a.pct == null) return (a.due && a.due >= today) ? "upcoming" : "notgraded";
+    if (Number(a.pct) === 0) return "zero";
+    return "graded";
+  }
+  function pctText(p) { p = Number(p); return (Math.round(p * 10) / 10).toString().replace(/\.0$/, "") + "%"; }
+  function bar(pct, cls) {
+    var b = h("span", { class: "bar" + (cls ? " " + cls : ""), "aria-hidden": "true" }, h("i", { style: "width:" + clamp(pct) + "%" }));
+    [70, 80, 90].forEach(function (t) { b.append(h("u", { style: "left:" + t + "%" })); });
+    return b;
+  }
+
+  function items() {
+    var today = todayISO(), out = [];
+    (state.classes || []).forEach(function (c) {
+      (c.assignments || []).forEach(function (a) {
+        out.push(Object.assign({}, a, { cls: "p" + c.period, className: c.name, st: statusOf(a, today) }));
+      });
+    });
+    return out;
+  }
+
+  function renderHeader(all) {
+    var m = state.meta || {};
+    var bits = [m.school || "Lassiter High School", m.gradeLevel, m.term].filter(Boolean);
+    $("#eyebrow").textContent = bits.join(" · ");
+    var src = (m.sources || ["ParentVUE"]).join(" and ");
+    var up = m.updated ? "Updated " + fmt(m.updated, { month: "short", day: "numeric", year: "numeric" }) + " from " + src : "From " + src;
+    if ((m.pending || []).indexOf("CTLS") !== -1) up += " · CTLS assignments not included yet";
+    $("#updated").textContent = up;
+    $("#foot-source").textContent = "Source: " + src + (m.updated ? ", pulled " + fmt(m.updated, { month: "long", day: "numeric", year: "numeric" }) : "") + ".";
+    var n = { zero: 0, notgraded: 0, upcoming: 0 };
+    all.forEach(function (a) { if (n[a.st] != null) n[a.st]++; });
+    n.upcoming = upcomingItems(all).length;
+    var graded = (state.classes || []).filter(function (c) { return c.graded; }).length;
+    var t = $("#tally"); t.replaceChildren();
+    t.append(
+      h("span", null, h("b", { text: graded }), "graded classes"),
+      h("span", null, h("b", { text: all.length }), "assignments"),
+      h("span", { class: n.zero ? "bad" : "" }, h("b", { text: n.zero }), n.zero === 1 ? "zero" : "zeros"),
+      h("span", null, h("b", { text: n.notgraded }), "not graded yet"),
+      h("span", { class: "up" }, h("b", { text: n.upcoming }), "coming up")
+    );
+  }
+
+  function renderStrip() {
+    var m = state.meta, el = $("#strip");
+    el.replaceChildren();
+    if (!m || !m.periods || !m.periods.length) return;
+    var start = m.periods[0].start, end = m.periods[m.periods.length - 1].end, span = days(start, end) || 1;
+    var pos = function (iso) { return (days(start, iso) / span) * 100; };
+    var today = todayISO(), cur = null;
+    m.periods.forEach(function (p) {
+      var l = pos(p.start), w = Math.max(pos(p.end) - l, 1);
+      var now = today >= p.start && today <= p.end;
+      if (now) cur = p;
+      el.append(h("div", { class: "seg" + (now ? " now" : ""), style: "left:" + l + "%;width:calc(" + w + "% - 3px)" }));
+      el.append(h("div", { class: "seg-label", style: "left:" + l + "%" },
+        h("b", { text: p.name }), fmt(p.start) + " – " + fmt(p.end)));
+    });
+    var offs = (m.noSchool || []).filter(function (d) { return d.date >= start && d.date <= end; });
+    offs.forEach(function (d) { el.append(h("div", { class: "off", style: "left:" + pos(d.date) + "%", title: fmt(d.date) + ": " + (d.title || "No school") })); });
+    $("#legend").hidden = !offs.length;
+    if (today >= start && today <= end) {
+      el.append(h("div", { class: "today", style: "left:" + pos(today) + "%" }, h("span", { text: "Today · " + fmt(today) })));
+    }
+    var aside = $("#term-aside");
+    if (cur) {
+      var left = days(today, cur.end);
+      aside.textContent = cur.name + " ends " + fmt(cur.end, { month: "long", day: "numeric" }) + (left > 0 ? " (" + left + " days)" : "");
+    } else aside.textContent = "";
+    el.setAttribute("aria-label", "Fall semester grading periods: " + m.periods.map(function (p) { return p.name + " " + fmt(p.start) + " to " + fmt(p.end); }).join("; "));
+  }
+
+  function copyBtn(text) {
+    var b = h("button", { class: "btn", type: "button", text: "Copy Email" });
+    b.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy Email"; }, 1600); };
+      var fallback = function () {
+        var span = b.parentNode.querySelector(".email");
+        var r = document.createRange(); r.selectNodeContents(span);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        b.textContent = "Selected";
+        setTimeout(function () { b.textContent = "Copy Email"; }, 1600);
+      };
+      try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+    });
+    return b;
+  }
+
+  function renderClasses(all) {
+    var ol = $("#classes"); ol.replaceChildren();
+    var list = state.classes || [];
+    if (!list.length) {
+      ol.append(h("li", { class: "status" }, h("strong", { text: "No classes yet" }), "Claude adds Ella's schedule here from ParentVUE."));
+      return;
+    }
+    list.forEach(function (c) {
+      var sub = [c.teacher, c.room ? "Rm " + c.room : ""].filter(Boolean).join(" · ");
+      if (!c.graded) {
+        ol.append(h("li", { class: "plain" }, h("div", { class: "crow" },
+          h("span", { class: "per", text: "P" + c.period }),
+          h("span", { class: "cname" }, h("strong", { text: c.name }), h("small", { text: sub })),
+          h("span", { class: "grade none", text: "No grade" }))));
+        return;
+      }
+      var b = band(c.grade);
+      var count = all.filter(function (a) { return a.cls === "p" + c.period; }).length;
+      var weights = h("div", { class: "weights" });
+      (c.categories || []).forEach(function (w) {
+        var has = w.mark != null;
+        weights.append(h("div", { class: "w" },
+          h("span", { text: w.type }),
+          h("span", { class: "wt", text: (w.weight != null ? w.weight + "%" : "") }),
+          has ? h("span", { class: "mk g-" + band(w.mark) }, bar(w.mark), String(Math.round(w.mark)))
+              : h("span", { class: "mk none", text: "Nothing yet" })));
+      });
+      var facts = h("div", { class: "facts" },
+        h("div", null, h("span", { text: "Now" }), h("b", { text: c.grade + (c.gradePct != null ? " (" + pctText(c.gradePct) + ")" : "") })),
+        c.firstProgress ? h("div", null, h("span", { text: c.firstProgressLabel || "1st Six Weeks report" }), h("b", { text: c.firstProgress })) : null,
+        h("div", null, h("span", { text: "Assignments" }), h("b", { text: count })),
+        c.code ? h("div", null, h("span", { text: "Course number" }), h("b", { text: c.code })) : null);
+      var show = h("button", { class: "btn primary", type: "button", text: "Show " + c.name + " Assignments" });
+      show.addEventListener("click", function () {
+        state.cls = "p" + c.period; state.status = "all"; save(); renderList();
+        $("#all").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      var contact = h("div", { class: "contact" },
+        h("span", { text: c.teacher }),
+        c.email ? h("span", { class: "email", text: c.email }) : null,
+        c.email ? copyBtn(c.email) : null);
+      var det = h("details", null,
+        h("summary", null,
+          h("span", { class: "per", text: "P" + c.period }),
+          h("span", { class: "cname" }, h("strong", { text: c.name }), h("small", { text: sub })),
+          h("span", { class: "gradebox g-" + b }, bar(c.gradePct, "big"), h("span", { class: "grade", text: c.grade }), h("span", { class: "chev", "aria-hidden": "true" }))),
+        h("div", { class: "cbody" },
+          facts,
+          h("div", null, h("h3", { text: "How The Grade Is Built" }), weights),
+          h("div", null, h("h3", { text: "Teacher" }), contact),
+          h("div", null, show)));
+      ol.append(h("li", null, det));
+    });
+  }
+
+  function chipFor(st, label) { return h("span", { class: "chip " + st, text: label }); }
+
+  function renderAttention(all) {
+    var ul = $("#attention"); ul.replaceChildren();
+    var rows = [];
+    all.filter(function (a) { return a.st === "zero"; })
+      .sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); })
+      .forEach(function (a) { rows.push({ when: "Due " + fmt(a.due), name: a.name, sub: a.className + " · " + (a.type || "Assignment") + " · " + a.score, chip: chipFor("zero", "Zero") }); });
+    all.filter(function (a) { return a.st === "notgraded"; })
+      .sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); })
+      .forEach(function (a) { rows.push({ when: "Due " + fmt(a.due), name: a.name, sub: a.className + " · " + (a.type || "Assignment") + " · not graded yet", chip: chipFor("notgraded", "Not Graded") }); });
+    var lows = [];
+    (state.classes || []).forEach(function (c) {
+      (c.categories || []).forEach(function (w) { if (w.mark != null && w.mark < 70) lows.push({ c: c, w: w }); });
+    });
+    lows.sort(function (a, b) { return a.w.mark - b.w.mark; }).forEach(function (x) {
+      rows.push({ when: x.c.name, name: x.w.type + " at " + Math.round(x.w.mark) + "%", sub: x.w.weight + "% of the " + x.c.name + " grade", chip: chipFor("low", "Low Category") });
+    });
+    if (!rows.length) { ul.append(h("li", { class: "status", text: (state.classes ? "Nothing needs attention right now." : "Nothing to show yet.") })); return; }
+    rows.forEach(function (r) {
+      ul.append(h("li", null, h("span", { class: "when", text: r.when }), h("span", { class: "what" }, h("strong", { text: r.name }), h("small", { text: r.sub })), r.chip));
+    });
+  }
+
+  function upcomingItems(all) {
+    var today = todayISO(), rows = [];
+    all.filter(function (a) { return a.st === "upcoming"; }).forEach(function (a) {
+      rows.push({ due: a.due, title: a.name, sub: a.className + " · " + (a.type || "Assignment"), src: "ParentVUE gradebook" });
+    });
+    var c = state.ctls && Array.isArray(state.ctls.items) ? state.ctls.items : [];
+    c.forEach(function (x) {
+      if (x.due && x.due < today) return;
+      var kind = x.kind ? x.kind + (x.time ? ", due " + x.time : "") : "";
+      rows.push({ due: x.due || null, whenText: x.whenText || "", title: x.title, sub: [x.className, kind].filter(Boolean).join(" · "), src: x.source || "CTLS", note: x.note || "" });
+    });
+    rows.sort(function (a, b) {
+      if (!a.due && !b.due) return 0;
+      if (!a.due) return -1;
+      if (!b.due) return 1;
+      return a.due.localeCompare(b.due);
+    });
+    return rows;
+  }
+
+  function renderUpcoming(all) {
+    var ul = $("#upcoming"); ul.replaceChildren();
+    var up = upcomingItems(all);
+    if (!up.length) { ul.append(h("li", { class: "status", text: state.classes ? "Nothing upcoming is posted in ParentVUE or CTLS." : "Nothing to show yet." })); return; }
+    var today = todayISO();
+    up.forEach(function (a) {
+      var chip;
+      if (!a.due) chip = chipFor("notgraded", "No Due Date");
+      else {
+        var d = days(today, a.due);
+        chip = chipFor("upcoming", d === 0 ? "Due Today" : d === 1 ? "Due Tomorrow" : "In " + d + " Days");
+      }
+      ul.append(h("li", null,
+        h("span", { class: "when", text: a.due ? fmt(a.due, { weekday: "short", month: "short", day: "numeric" }) : (a.whenText || "This week") }),
+        h("span", { class: "what" }, h("strong", { text: a.title }), h("small", { text: a.sub }),
+          h("small", { class: "src", text: "Source: " + a.src + (a.note ? ". " + a.note : "") })),
+        chip));
+    });
+  }
+
+  function renderList() {
+    if (!state.classes) {
+      $("#f-class").replaceChildren(); $("#f-status").replaceChildren();
+      $("#count").textContent = ""; $("#all-aside").textContent = "";
+      $("#list").replaceChildren(h("div", { class: "status", text: "Assignments appear here once the data loads." }));
+      return;
+    }
+    var all = items();
+    var classes = (state.classes || []).filter(function (c) { return c.graded; });
+    if (state.cls !== "all" && !classes.some(function (c) { return "p" + c.period === state.cls; })) state.cls = "all";
+    if (!STATUS.some(function (s) { return s.key === state.status; })) state.status = "all";
+
+    var fc = $("#f-class"); fc.replaceChildren();
+    var mk = function (key, label, n, active, onClick) {
+      var b = h("button", { type: "button", "aria-pressed": active ? "true" : "false" }, label, h("span", { class: "n", text: n }));
+      b.addEventListener("click", onClick);
+      return b;
+    };
+    fc.append(mk("all", "All Classes", all.length, state.cls === "all", function () { state.cls = "all"; save(); renderList(); }));
+    classes.forEach(function (c) {
+      var key = "p" + c.period;
+      var n = all.filter(function (a) { return a.cls === key; }).length;
+      fc.append(mk(key, c.name, n, state.cls === key, function () { state.cls = key; save(); renderList(); }));
+    });
+
+    var inClass = all.filter(function (a) { return state.cls === "all" || a.cls === state.cls; });
+    var fs = $("#f-status"); fs.replaceChildren();
+    STATUS.forEach(function (s) {
+      var n = s.key === "all" ? inClass.length : inClass.filter(function (a) { return a.st === s.key; }).length;
+      fs.append(mk(s.key, s.label, n, state.status === s.key, function () { state.status = s.key; save(); renderList(); }));
+    });
+
+    var q = state.q.trim().toLowerCase();
+    var shown = inClass.filter(function (a) {
+      if (state.status !== "all" && a.st !== state.status) return false;
+      if (!q) return true;
+      return [a.name, a.type, a.notes, a.className, a.score].join(" ").toLowerCase().indexOf(q) !== -1;
+    }).sort(function (a, b) {
+      var c = (a.due || "").localeCompare(b.due || "");
+      if (!c) c = (a.name || "").localeCompare(b.name || "");
+      return state.sort === "asc" ? c : -c;
+    });
+
+    $("#f-sort").textContent = state.sort === "asc" ? "Oldest First" : "Newest First";
+    $("#f-sort").setAttribute("aria-label", "Sort by due date, currently " + (state.sort === "asc" ? "oldest first" : "newest first"));
+    $("#count").textContent = state.classes ? ("Showing " + shown.length + " of " + all.length + " assignments") : "";
+    $("#all-aside").textContent = state.classes ? "Tap a filter to narrow the list" : "";
+
+    var list = $("#list"); list.replaceChildren();
+    if (!state.classes) { list.append(h("div", { class: "status", text: "Assignments appear here once the data loads." })); return; }
+    if (!shown.length) {
+      var clr = h("button", { class: "btn", type: "button", text: "Clear Filters" });
+      clr.addEventListener("click", clearFilters);
+      list.append(h("div", { class: "status" }, h("strong", { text: "No assignments match" }), h("p", { style: "margin:0 0 10px", text: "Try another class, status or search term." }), clr));
+      return;
+    }
+    shown.forEach(function (a) {
+      var scoreEl;
+      if (a.st === "zero") scoreEl = h("div", { class: "a-score" }, chipFor("zero", "Zero"), h("small", { style: "display:block", text: a.score }));
+      else if (a.st === "upcoming") scoreEl = h("div", { class: "a-score" }, chipFor("upcoming", "Coming Up"));
+      else if (a.st === "notgraded") scoreEl = h("div", { class: "a-score" }, chipFor("notgraded", "Not Graded"));
+      else if (a.st === "nfg") scoreEl = h("div", { class: "a-score" }, chipFor("nfg", "Not For Grading"), a.score ? h("small", { style: "display:block", text: a.score }) : null);
+      else scoreEl = h("div", { class: "a-score" }, h("b", { class: "p-" + band(a.pct), text: pctText(a.pct) }), h("small", { text: a.score }));
+      var dueTxt = fmt(a.due);
+      list.append(h("div", { class: "arow", role: "listitem" },
+        h("span", { class: "a-due", text: dueTxt }),
+        h("span", { class: "a-cls", "data-due": dueTxt, text: a.className }),
+        h("span", { class: "a-name" }, h("strong", { text: a.name }), a.notes ? h("small", { text: "Note: " + a.notes }) : null),
+        h("span", { class: "a-type", text: a.type || "" }),
+        scoreEl));
+    });
+  }
+
+  function clearFilters() {
+    state.cls = "all"; state.status = "all"; state.q = ""; $("#f-q").value = ""; save(); renderList();
+  }
+
+  function render() {
+    var all = items();
+    renderHeader(all);
+    renderStrip();
+    renderClasses(all);
+    renderAttention(all);
+    renderUpcoming(all);
+    renderList();
+  }
+
+  var qTimer = null;
+  $("#f-q").addEventListener("input", function (e) {
+    clearTimeout(qTimer);
+    var v = e.target.value;
+    qTimer = setTimeout(function () { state.q = v; renderList(); }, 120);
+  });
+  $("#f-sort").addEventListener("click", function () { state.sort = state.sort === "asc" ? "desc" : "asc"; save(); renderList(); });
+  $("#f-clear").addEventListener("click", clearFilters);
+
+  function showMessage(title, body) {
+    $("#updated").textContent = body;
+    var ol = $("#classes"); ol.replaceChildren(h("li", { class: "status" }, h("strong", { text: title }), body));
+  }
+
+  // Live data from the family Google Sheet through its Apps Script feed (?view=ella)
+  var API_KEY_URL = "newman_school_script_url", API_KEY_PASS = "newman_school_script_key", CACHE = "ella-dashboard-cache-v1";
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function takeSetupLink() {
+    try {
+      var p = new URLSearchParams(location.search), api = p.get("api");
+      if (api && /^https:\/\/script\.google(usercontent)?\.com\//.test(api)) { store(API_KEY_URL, api); store(API_KEY_PASS, p.get("key") || ""); }
+      if (p.has("api") || p.has("key")) history.replaceState(null, "", location.pathname);
+    } catch (e) {}
+  }
+  function apply(d) {
+    state.meta = d.meta || null; state.ctls = d.ctls || null; state.classes = Array.isArray(d.classes) ? d.classes : [];
+    render();
+  }
+  var busy = false;
+  function load() {
+    var api = store(API_KEY_URL), key = store(API_KEY_PASS) || "";
+    if (!api) { showMessage("Setup needed", "Open the setup link once on this device to connect it to the family sheet."); return; }
+    if (busy) return; busy = true;
+    var url = api + (api.indexOf("?") >= 0 ? "&" : "?") + "view=ella" + (key ? "&key=" + encodeURIComponent(key) : "");
+    fetch(url, { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || d.error || !Array.isArray(d.classes)) { if (!state.classes) showMessage("Couldn't load the data", (d && d.error) || "The family sheet didn't answer. It will try again shortly."); return; }
+      store(CACHE, JSON.stringify(d)); apply(d);
+    }).catch(function () {
+      if (!state.classes) showMessage("Offline", "No saved copy yet. Connect to the internet to load Ella's dashboard.");
+    }).then(function () { busy = false; });
+  }
+  takeSetupLink();
+  renderList();
+  try { var cached = JSON.parse(store(CACHE) || "null"); if (cached && Array.isArray(cached.classes)) apply(cached); } catch (e) {}
+  load();
+  setInterval(load, 5 * 60 * 1000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+  window.addEventListener("online", load);
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
+})();
+</script>
+</body>
+</html>
