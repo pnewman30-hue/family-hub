@@ -63,8 +63,8 @@ h1, h2, h3 { margin: 0; line-height: 1.12; }
 .score span { font-size: 12px; font-weight: 800; letter-spacing: .14em; color: var(--muted); }
 
 /* bottom nav */
-nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(7,15,36,.96); border-top: 1px solid var(--line); padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 4px; z-index: 5; }
-nav.tabs button { background: transparent; border: 0; border-radius: 12px; padding: 8px 4px; min-height: 52px; font-size: 13px; font-weight: 700; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(7,15,36,.96); border-top: 1px solid var(--line); padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 4px; z-index: 5; }
+nav.tabs button { background: transparent; border: 0; border-radius: 12px; padding: 8px 2px; min-height: 52px; font-size: 12px; line-height: 1.1; text-align: center; font-weight: 700; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; }
 nav.tabs button[aria-current="page"] { background: var(--gold); color: var(--gold-ink); }
 nav.tabs svg { width: 22px; height: 22px; }
 
@@ -125,6 +125,16 @@ nav.tabs svg { width: 22px; height: 22px; }
 .cats .c { display: grid; grid-template-columns: minmax(0,1fr) 46px 52px; gap: 10px; }
 .asg { display: grid; grid-template-columns: 70px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
 .asg:first-child { border-top: 0; }
+button.asg { width: 100%; background: none; border: 0; border-top: 1px solid var(--line); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+button.asg:first-child { border-top: 0; }
+.asg .when b { display: block; font-size: 15px; color: var(--white); }
+.asg .chev { color: var(--muted); font-size: 20px; margin-left: 6px; }
+.wkline { display: flex; align-items: center; gap: 10px; margin: 18px 0 6px; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.wkline::after { content: ""; flex: 1; height: 2px; background: var(--line); }
+.wkline.past { color: var(--muted); }
+.drow { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.drow:first-child { border-top: 0; }
+.drow span:first-child { color: var(--muted); font-weight: 700; }
 .filters { display: flex; gap: 8px; flex-wrap: wrap; }
 .filters button { border: 2px solid var(--line); background: transparent; border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 700; min-height: 42px; }
 .filters button[aria-pressed="true"] { background: var(--white); color: var(--panel); border-color: var(--white); }
@@ -151,7 +161,7 @@ nav.tabs svg { width: 22px; height: 22px; }
   var API_KEY_URL = "newman_school_script_url", API_KEY_PASS = "newman_school_script_key", CACHE = "ella-dashboard-cache-v1", LOCAL = "ella-soccer-v1";
   var DEFAULT_API = "https://script.google.com/macros/s/AKfycbxNkbjYQDpXh_BDXwxtEEnqX5JtMm3BAOi9RBpiIptpsfgy3VoU-FP3L4xf0Qo_ng81pQ/exec";
   var D = null;
-  var ui = { view: "home", bucket: "game", ev: null, tab: "when", open: {}, filter: "all" };
+  var ui = { view: "home", bucket: "game", ev: null, tab: "when", open: {}, filter: "games", film: "all", item: null, back: "schedule" };
   var mine = { done: {}, conf: {} };
 
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
@@ -211,7 +221,8 @@ nav.tabs svg { width: 22px; height: 22px; }
     plan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M3 12h18"/><circle cx="12" cy="12" r="3"/></svg>',
     trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 20h8"/></svg>',
     grades: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20V12M12 20V6M19 20v-9"/></svg>',
-    schedule: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
+    schedule: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>'
   };
 
   /* ---------- data model ---------- */
@@ -526,24 +537,112 @@ nav.tabs svg { width: 22px; height: 22px; }
     return h + '</div>';
   }
 
+  /* ---------- season schedule + film room ---------- */
+  var KIND = { test: "Game", quiz: "Scrimmage", work: "Assignment" };
+  function schedItems() {
+    var t = today(), out = [], seen = {};
+    var ctls = D.ctls && Array.isArray(D.ctls.items) ? D.ctls.items : [];
+    ctls.forEach(function (x) {
+      if (!x.due || x.due < t) return;
+      var k = /test|exam/i.test(x.kind) ? "test" : /quiz/i.test(x.kind) ? "quiz" : "work";
+      var c = (x.period && classByPeriod(x.period)) || classByName(x.className);
+      var id = x.id || (k + "-" + x.due + "-" + low(x.title).replace(/\W+/g, ""));
+      seen[(c ? c.period : x.className) + "|" + x.due + "|" + k] = true;
+      out.push({ key: "c-" + id, ev: k !== "work" ? id : null, kind: k, title: x.title, due: x.due, cls: c, className: c ? shortName(c) : x.className,
+        type: x.kind, note: x.note || "", source: x.source || "CTLS", upcoming: true, pct: null, score: "", status: "upcoming" });
+    });
+    allAssignments().forEach(function (a) {
+      var k = kindOf(a), up = !!(a.due && a.due >= t && a.pct == null);
+      if (up && seen[a.cls.period + "|" + a.due + "|" + k]) return;
+      out.push({ key: "a-" + a.cls.period + "-" + a.id, ev: up && k !== "work" ? "pv-" + a.id : null, kind: k, title: a.name, due: a.due, assigned: a.assigned,
+        cls: a.cls, className: shortName(a.cls), type: a.type, note: a.notes || "", source: "ParentVUE", upcoming: up, pct: a.pct, score: a.score, status: a.status });
+    });
+    return out;
+  }
+  function weekStart(s) { var d = toDate(s); d.setDate(d.getDate() - d.getDay()); return iso(d); }
+  function weekLabel(s, past) {
+    var w = weekStart(s), now = weekStart(today());
+    if (w === now) return "This Week";
+    if (!past && w === addDays(now, 7)) return "Next Week";
+    if (past && w === addDays(now, -7)) return "Last Week";
+    return "Week Of " + fmt(addDays(w, 1));
+  }
+  function untilPill(due) {
+    var n = days(today(), due);
+    return '<span class="pill' + (n <= 2 ? " gold" : "") + '">' + (n === 0 ? "TODAY" : n === 1 ? "TOMORROW" : "IN " + n + " DAYS") + '</span>';
+  }
+  function itemRow(a) {
+    var right;
+    if (a.upcoming) right = untilPill(a.due);
+    else if (a.pct != null) right = '<b class="g-' + band(a.pct) + '">' + (Math.round(a.pct * 10) / 10) + '%</b>';
+    else if (a.status === "nfg") right = '<span class="small">Not for grading</span>';
+    else right = '<span class="pill">NOT GRADED</span>';
+    return '<button class="asg" data-item="' + esc(a.key) + '"><span class="when small">' + (a.due ? '<b>' + esc(wk(a.due)) + '</b>' + esc(fmt(a.due)) : "No date") + '</span><span><span style="display:block;font-weight:700">' + esc(a.title) + '</span><span class="small">' + esc(a.className) + ' · ' + KIND[a.kind] + '</span></span><span class="row" style="gap:4px">' + right + '<span class="chev" aria-hidden="true">›</span></span></button>';
+  }
+  function groupedList(list, past) {
+    if (!list.length) return '<div class="panel"><div class="msg" style="padding:20px">' + (past ? "Nothing to review here yet." : "Nothing scheduled here yet.") + '</div></div>';
+    var h = "", cur = null;
+    list.forEach(function (a) {
+      var lab = a.due ? weekLabel(a.due, past) : "No Date";
+      if (lab !== cur) { if (cur !== null) h += '</div>'; h += '<div class="wkline' + (past ? " past" : "") + '">' + esc(lab) + '</div><div class="panel">'; cur = lab; }
+      h += itemRow(a);
+    });
+    return h + '</div>';
+  }
+  function filterBar(name, cur, list) {
+    return '<div class="filters">' + list.map(function (x) { return '<button data-' + name + '="' + x[0] + '" aria-pressed="' + (cur === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>';
+  }
+  function byKind(f) { return function (a) { return f === "all" || (f === "games" && a.kind === "test") || (f === "scrimmages" && a.kind === "quiz") || (f === "assignments" && a.kind === "work"); }; }
+
   function viewSchedule() {
-    var t = today(), list = allAssignments().map(function (a) { return Object.assign({ k: kindOf(a) }, a); });
-    var f = ui.filter;
-    var shown = list.filter(function (a) {
-      if (f === "upcoming") return a.due && a.due >= t;
-      if (f === "games") return a.k === "test";
-      if (f === "scrimmages") return a.k === "quiz";
-      if (f === "waiting") return a.pct == null && a.status !== "nfg" && a.due && a.due < t;
-      return true;
-    }).sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); });
-    var fl = [["all", "All"], ["upcoming", "Coming Up"], ["games", "Games"], ["scrimmages", "Scrimmages"], ["waiting", "Not Graded Yet"]];
-    var h = '<div class="stack" style="gap:6px"><div class="eyebrow">Full Schedule</div><h1 style="font-size:34px;font-weight:800">Every Assignment</h1></div>';
-    h += '<div class="filters">' + fl.map(function (x) { return '<button data-filter="' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>';
-    h += '<div class="panel">' + (shown.length ? shown.map(function (a) {
-      var right = a.pct != null ? '<b class="g-' + band(a.pct) + '">' + (Math.round(a.pct * 10) / 10) + '%</b>' : a.status === "nfg" ? '<span class="small">Not for grading</span>' : (a.due && a.due >= t ? '<span class="pill gold">COMING UP</span>' : '<span class="pill">NOT GRADED</span>');
-      return '<div class="asg"><span class="small">' + esc(fmt(a.due)) + '</span><span><span style="display:block;font-weight:700">' + esc(a.name) + '</span><span class="small">' + esc(a.cls.name) + (a.k !== "work" ? " · " + (a.k === "test" ? "Game" : "Scrimmage") : "") + '</span></span>' + right + '</div>';
-    }).join("") : '<div class="msg" style="padding:20px">Nothing here.</div>') + '</div>';
+    var all = schedItems(), f = ui.filter;
+    var up = all.filter(function (a) { return a.upcoming; }).filter(byKind(f)).sort(function (a, b) { return a.due.localeCompare(b.due) || (a.kind === "test" ? -1 : 1); });
+    var pastN = all.filter(function (a) { return !a.upcoming; }).length;
+    var h = '<div class="stack" style="gap:6px"><div class="eyebrow">What\'s Ahead</div><h1 style="font-size:34px;font-weight:800">Season Schedule</h1><div class="sub">Tap any game, scrimmage or assignment for the details.</div></div>';
+    h += filterBar("filter", f, [["games", "Games"], ["scrimmages", "Scrimmages"], ["assignments", "Assignments"], ["all", "All"]]);
+    h += '<div>' + groupedList(up, false) + '</div>';
+    h += '<div class="wkline past">Final Whistle</div><button class="panel row" data-go="film" style="width:100%;border:2px dashed var(--line);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer"><span class="stack" style="gap:4px"><b style="font-size:17px">Already Played? Review It In The Film Room</b><span class="small">' + pastN + ' past games, scrimmages and assignments</span></span><span class="chev" style="font-size:26px">›</span></button>';
     return h;
+  }
+
+  function viewFilm() {
+    var f = ui.film, t = today();
+    var past = schedItems().filter(function (a) { return !a.upcoming; }).filter(function (a) {
+      if (f === "waiting") return a.pct == null && a.status !== "nfg";
+      return byKind(f)(a);
+    }).sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); });
+    var h = '<div class="stack" style="gap:6px"><div class="eyebrow">Film Room</div><h1 style="font-size:34px;font-weight:800">Review The Tape</h1><div class="sub">Every past game, scrimmage and assignment. Tap one to see how it went.</div></div>';
+    h += filterBar("film", f, [["all", "All"], ["games", "Games"], ["scrimmages", "Scrimmages"], ["assignments", "Assignments"], ["waiting", "Not Graded Yet"]]);
+    return h + '<div>' + groupedList(past, true) + '</div>';
+  }
+
+  function viewDetail() {
+    var a = schedItems().filter(function (x) { return x.key === ui.item; })[0];
+    var back = '<button class="btn ghost" data-go="' + ui.back + '" style="align-self:flex-start">‹ Back To ' + (ui.back === "film" ? "Film Room" : "Season Schedule") + '</button>';
+    if (!a) return '<div class="stack">' + back + '<div class="msg">That item isn\'t on the schedule anymore.</div></div>';
+    var c = a.cls || {}, rows = [];
+    rows.push(["Due", a.due ? longDay(a.due) + (a.upcoming ? " · " + (days(today(), a.due) === 0 ? "today" : days(today(), a.due) === 1 ? "tomorrow" : "in " + days(today(), a.due) + " days") : "") : "No date"]);
+    if (a.assigned && a.assigned !== a.due) rows.push(["Assigned", longDay(a.assigned)]);
+    rows.push(["Class", esc(c.name || a.className) + (c.period ? " · Period " + c.period : "")]);
+    if (c.teacher) rows.push(["Teacher", esc(c.teacher) + (c.email ? '<br><a href="mailto:' + esc(c.email) + '" style="color:var(--gold)">' + esc(c.email) + '</a>' : "")]);
+    if (a.type) rows.push(["Category", esc(a.type)]);
+    if (!a.upcoming) rows.push(["Score", a.pct != null ? '<b class="g-' + band(a.pct) + '" style="font-size:20px">' + (Math.round(a.pct * 10) / 10) + '%</b>' + (a.score ? ' <span class="small">(' + esc(a.score) + ')</span>' : "") : a.status === "nfg" ? "Not for grading" : "Not graded yet"]);
+    if (a.note) rows.push(["Notes", esc(a.note)]);
+    rows.push(["From", esc(a.source)]);
+    var h = '<div class="stack" style="gap:16px">' + back;
+    h += '<div class="stack" style="gap:6px"><div class="eyebrow">' + KIND[a.kind] + (a.upcoming ? " · Coming Up" : " · Film Room") + '</div><h1 style="font-size:30px;font-weight:800;line-height:1.15">' + esc(a.title) + '</h1><div class="sub">' + esc(a.className) + '</div></div>';
+    var award = "";
+    if (!a.upcoming && a.pct != null) {
+      if (a.kind === "test" && a.pct >= 80) award = trophy(44) + '<div><b>Trophy earned.</b> That game is in your trophy case.</div>';
+      else if (a.kind === "quiz" && a.pct >= 80) award = medal(40) + '<div><b>Medal earned.</b> Nice scrimmage.</div>';
+      else if (a.kind === "work" && a.pct >= 100) award = ball(36) + '<div><b>Perfect work.</b> Another ball in the net.</div>';
+      else award = '<div><b>Film study:</b> look at what you missed, and ask ' + esc(c.teacher ? c.teacher.split(" ")[0] : "your teacher") + ' about one thing you\'d do differently.</div>';
+    }
+    if (award) h += '<div class="panel row" style="justify-content:flex-start;gap:14px">' + award + '</div>';
+    h += '<div class="panel">' + rows.map(function (r) { return '<div class="drow"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>'; }).join("") + '</div>';
+    if (a.upcoming && a.ev) h += '<button class="btn gold" data-go="plan" data-ev="' + esc(a.ev) + '">Open My Game Plan</button>';
+    else if (a.upcoming) h += '<div class="small">Training tip: knock it out a day early so it never sneaks up on you.</div>';
+    return h + '</div>';
   }
 
   function statusLine() {
@@ -552,10 +651,10 @@ nav.tabs svg { width: 22px; height: 22px; }
     return "Grades from ParentVUE, updated " + when + ". Due dates from ParentVUE and teacher posts in CTLS.";
   }
 
-  var VIEWS = { home: ["Home", viewHome], plan: ["Coach", viewPlan], trophy: ["Trophies", viewTrophy], grades: ["Grades", viewGrades], schedule: ["Schedule", viewSchedule] };
+  var VIEWS = { home: ["Home", viewHome], plan: ["Coach", viewPlan], trophy: ["Trophies", viewTrophy], grades: ["Grades", viewGrades], schedule: ["Schedule", viewSchedule], film: ["Film Room", viewFilm] };
   function renderTabs() {
     document.getElementById("tabs").innerHTML = Object.keys(VIEWS).map(function (k) {
-      return '<button data-go="' + k + '"' + (ui.view === k ? ' aria-current="page"' : '') + '>' + navIcons[k] + VIEWS[k][0] + '</button>';
+      return '<button data-go="' + k + '"' + (ui.view === k || (ui.view === "detail" && ui.back === k) ? ' aria-current="page"' : '') + '>' + navIcons[k] + VIEWS[k][0] + '</button>';
     }).join("");
   }
   function render() {
@@ -563,7 +662,7 @@ nav.tabs svg { width: 22px; height: 22px; }
     var app = document.getElementById("app");
     if (!D) return;
     clipN = 0;
-    app.innerHTML = VIEWS[ui.view][1]();
+    app.innerHTML = ui.view === "detail" ? viewDetail() : VIEWS[ui.view][1]();
   }
   function go(view, ev) {
     ui.view = view;
@@ -573,7 +672,7 @@ nav.tabs svg { width: 22px; height: 22px; }
   }
 
   document.addEventListener("click", function (e) {
-    var el = e.target.closest("[data-go],[data-bucket],[data-ev],[data-tab],[data-done],[data-conf],[data-cls],[data-filter]");
+    var el = e.target.closest("[data-go],[data-bucket],[data-ev],[data-tab],[data-done],[data-conf],[data-cls],[data-filter],[data-film],[data-item]");
     if (!el) return;
     if (el.dataset.go) return go(el.dataset.go, el.dataset.ev);
     if (el.dataset.bucket) { ui.bucket = el.dataset.bucket; ui.ev = null; ui.tab = "when"; return render(); }
@@ -583,6 +682,8 @@ nav.tabs svg { width: 22px; height: 22px; }
     if (el.dataset.conf) { var k = el.dataset.conf; mine.conf[k] = mine.conf[k] === el.dataset.v ? "" : el.dataset.v; saveMine(); return render(); }
     if (el.dataset.cls) { ui.open[el.dataset.cls] = !ui.open[el.dataset.cls]; return render(); }
     if (el.dataset.filter) { ui.filter = el.dataset.filter; return render(); }
+    if (el.dataset.film) { ui.film = el.dataset.film; return render(); }
+    if (el.dataset.item) { if (ui.view !== "detail") ui.back = ui.view; ui.view = "detail"; ui.item = el.dataset.item; render(); window.scrollTo(0, 0); return; }
   });
   document.addEventListener("keydown", function (e) {
     if ((e.key === "Enter" || e.key === " ") && e.target.matches("[role=button][data-go]")) { e.preventDefault(); e.target.click(); }
