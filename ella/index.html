@@ -617,9 +617,10 @@ details[open] .chev { transform: rotate(225deg) translateY(-2px); }
     state.meta = d.meta || null; state.ctls = d.ctls || null; state.classes = Array.isArray(d.classes) ? d.classes : [];
     render();
   }
+  var DEFAULT_API = "https://script.google.com/macros/s/AKfycbxNkbjYQDpXh_BDXwxtEEnqX5JtMm3BAOi9RBpiIptpsfgy3VoU-FP3L4xf0Qo_ng81pQ/exec";
   var busy = false;
   function load() {
-    var api = store(API_KEY_URL), key = store(API_KEY_PASS) || "";
+    var api = store(API_KEY_URL) || DEFAULT_API, key = store(API_KEY_PASS) || "";
     if (!api) { showMessage("Setup needed", "Open the setup link once on this device to connect it to the family sheet."); return; }
     if (busy) return; busy = true;
     var url = api + (api.indexOf("?") >= 0 ? "&" : "?") + "view=ella" + (key ? "&key=" + encodeURIComponent(key) : "");
