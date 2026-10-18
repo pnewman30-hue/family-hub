@@ -474,8 +474,12 @@ nav.tabs svg { width: 22px; height: 22px; }
     periods.forEach(function (p, i) {
       var state = t > p.end ? "done" : t >= p.start ? "live" : "next";
       var wins = [], close = [], losses = 0;
-      if (state === "done" && i === 0) {
-        graded.forEach(function (c) { if (c.firstProgressPct != null) { if (c.firstProgressPct >= 90) wins.push([shortName(c), c.firstProgressPct]); else losses++; } });
+      var saved = m.periodResults && m.periodResults[String(i)] ? m.periodResults[String(i)].grades || {} : null;
+      if (state === "done") {
+        graded.forEach(function (c) {
+          var v = saved && saved["p" + c.period] != null ? saved["p" + c.period] : (i === 0 ? c.firstProgressPct : null);
+          if (v != null) { if (v >= 90) wins.push([shortName(c), v]); else losses++; }
+        });
       } else if (state === "live") {
         graded.forEach(function (c) { if (c.gradePct != null) { if (c.gradePct >= 90) wins.push([shortName(c), c.gradePct]); else { losses++; if (c.gradePct >= 85) close.push([shortName(c), c.gradePct]); } } });
       }
