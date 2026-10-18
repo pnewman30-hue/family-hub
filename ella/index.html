@@ -22,8 +22,8 @@
   --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; background: var(--navy); color: var(--white); font-family: var(--font); -webkit-font-smoothing: antialiased; }
-body { background: repeating-linear-gradient(90deg, var(--navy) 0, var(--navy) 120px, var(--navy2) 120px, var(--navy2) 240px); min-height: 100vh; }
+html, body { margin: 0; background: #2C7A3B; color: var(--white); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+body { background: repeating-linear-gradient(180deg, #2E7F3D 0, #2E7F3D 140px, #276F35 140px, #276F35 280px); background-attachment: fixed; min-height: 100vh; }
 button { font: inherit; color: inherit; cursor: pointer; }
 a { color: inherit; }
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
@@ -31,8 +31,9 @@ a { color: inherit; }
 h1, h2, h3 { margin: 0; line-height: 1.12; }
 .eyebrow { font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
 .sub { color: var(--muted); font-size: 17px; }
-.small { color: var(--dim); font-size: 14px; }
-.panel { background: rgba(7, 15, 36, .82); border-radius: 18px; padding: 18px 20px; }
+.small { color: #DCEADF; font-size: 14px; }
+.panel .small, .card .small, button.asg .small, .prac .small, .cls .small, .bucket .small { color: var(--dim); }
+.panel { background: #0B1630; box-shadow: 0 2px 10px rgba(0,0,0,.18); border-radius: 18px; padding: 18px 20px; }
 .row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
 .stack { display: flex; flex-direction: column; gap: 12px; }
 .pill { font-size: 12px; font-weight: 800; letter-spacing: .08em; padding: 5px 12px; border-radius: 999px; border: 2px solid var(--white); white-space: nowrap; }
@@ -46,7 +47,7 @@ h1, h2, h3 { margin: 0; line-height: 1.12; }
 /* header */
 .top { display: flex; align-items: center; gap: 16px; }
 .top h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
-.status { font-size: 13px; color: var(--dim); }
+.status { font-size: 13px; color: #DCEADF; }
 
 /* goal frame */
 .goal { position: relative; padding: 12px 12px 0; }
@@ -124,7 +125,7 @@ nav.tabs svg { width: 22px; height: 22px; }
 .award small { font-size: 12px; color: var(--muted); line-height: 1.25; }
 .medals { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 6px; }
 .balls { display: flex; flex-wrap: wrap; gap: 8px; }
-.empty { border: 2px dashed var(--line); border-radius: 16px; padding: 16px 18px; color: #E3E8F2; }
+.empty { border: 2px dashed rgba(255,255,255,.55); background: rgba(7,15,36,.35); border-radius: 16px; padding: 16px 18px; color: #F2F6F3; }
 
 /* grades + schedule */
 .cls { width: 100%; text-align: left; background: var(--panel); border: 0; border-radius: 16px; padding: 16px 18px; color: var(--white); display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 12px; align-items: center; }
@@ -139,13 +140,13 @@ button.asg:first-child { border-top: 0; }
 .asg .when b { display: block; font-size: 15px; color: var(--white); }
 .asg .chev { color: var(--muted); font-size: 20px; margin-left: 6px; }
 .wkline { display: flex; align-items: center; gap: 10px; margin: 18px 0 6px; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
-.wkline::after { content: ""; flex: 1; height: 2px; background: var(--line); }
-.wkline.past { color: var(--muted); }
+.wkline::after { content: ""; flex: 1; height: 2px; background: rgba(255,255,255,.4); }
+.wkline.past { color: #E6F2E8; }
 .drow { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
 .drow:first-child { border-top: 0; }
 .drow span:first-child { color: var(--muted); font-weight: 700; }
 .filters { display: flex; gap: 8px; flex-wrap: wrap; }
-.filters button { border: 2px solid var(--line); background: transparent; border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 700; min-height: 42px; }
+.filters button { border: 2px solid rgba(255,255,255,.55); background: transparent; border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 700; min-height: 42px; }
 .filters button[aria-pressed="true"] { background: var(--white); color: var(--panel); border-color: var(--white); }
 .msg { padding: 40px 10px; text-align: center; color: var(--muted); font-size: 18px; }
 
@@ -374,7 +375,7 @@ button.asg:first-child { border-top: 0; }
       ["Ask The Ref", "Stuck on something? Ask the teacher before the game, not after."]
     ];
     var tp = TIPS[Math.floor(toDate(t) / 86400000) % TIPS.length];
-    h += '<div class="panel" style="background:#1E5A39"><div class="eyebrow" style="color:#FFE58A">Coach\'s Training Tip · ' + esc(tp[0]) + '</div><div style="font-size:18px;line-height:1.45;margin-top:6px">' + esc(tp[1]) + '</div></div>';
+    h += '<div class="panel" style="background:#0F3B22"><div class="eyebrow" style="color:#FFE58A">Coach\'s Training Tip · ' + esc(tp[0]) + '</div><div style="font-size:18px;line-height:1.45;margin-top:6px">' + esc(tp[1]) + '</div></div>';
     var also = [];
     evs.slice(1).filter(function (e) { return days(t, e.due) <= 7; }).forEach(function (e) {
       also.push({ title: e.className + " " + (e.kind === "test" ? "Test" : "Quiz"), sub: (e.kind === "test" ? "Game" : "Scrimmage") + " · " + longDay(e.due), pill: e.kind === "test" ? "GAME" : "SCRIMMAGE", ev: e.id });
@@ -454,7 +455,7 @@ button.asg:first-child { border-top: 0; }
       ];
       h += '<div class="stack"><div style="font-size:20px;font-weight:700">Coach\'s moves for tonight.</div>' + drills.map(function (x, i) {
         return '<div class="panel drill"><div class="num">' + (i + 1) + '</div><div style="font-size:17px;line-height:1.4"><b>' + x[0] + '</b> ' + esc(x[1]) + '</div><div class="small">' + x[2] + '</div></div>';
-      }).join("") + '<div class="panel" style="background:#1E5A39;font-size:17px;line-height:1.45"><b>Training tip:</b> ' + (ev.kind === "test" ? "you don't get better at soccer by watching. Test yourself instead of rereading." : "say it out loud. If you can say it without looking, you know it.") + '</div></div>';
+      }).join("") + '<div class="panel" style="background:#0F3B22;font-size:17px;line-height:1.45"><b>Training tip:</b> ' + (ev.kind === "test" ? "you don't get better at soccer by watching. Test yourself instead of rereading." : "say it out loud. If you can say it without looking, you know it.") + '</div></div>';
     } else {
       var cat = catFor(ev.cls, ev.kind), last = lastOf(ev.cls, ev.kind), weak = weakSpot(ev.cls), why = [];
       if (cat && cat.weight != null) why.push([cat.weight + "%", "var(--gold)", "of your " + ev.className + " grade comes from " + (ev.kind === "test" ? "tests" : "quizzes") + "."]);
@@ -594,7 +595,7 @@ button.asg:first-child { border-top: 0; }
     h += '</div><div class="stack" style="gap:8px"><h2 class="sec">Medals · Quizzes Scored 80+</h2>';
     if (aw.medals.length) h += '<div class="panel medals">' + aw.medals.map(function (a) { return '<div class="award" style="padding-bottom:0">' + medal(50) + '<b style="font-size:17px">' + Math.round(a.pct) + '</b><small>' + esc(shortName(a.cls)) + '<br>' + esc(a.name) + '</small></div>'; }).join("") + '</div>';
     else h += '<div class="empty">Medals show up after quizzes scored 80 or higher.</div>';
-    h += '</div><div class="stack" style="gap:8px"><h2 class="sec">Balls · Practices And Perfect Work</h2><div class="panel" style="background:#1E5A39"><div class="balls">';
+    h += '</div><div class="stack" style="gap:8px"><h2 class="sec">Balls · Practices And Perfect Work</h2><div class="panel" style="background:#0F3B22"><div class="balls">';
     for (var i = 0; i < aw.balls; i++) h += ball(36);
     h += '</div>' + (aw.balls ? '' : '<div>Finish a practice to score your first ball.</div>') + '</div><div class="small">' + aw.perfect + ' assignments with full marks + ' + aw.practices + ' finished practices.</div></div>';
     var up = evs.slice(0, 3);
@@ -683,7 +684,7 @@ button.asg:first-child { border-top: 0; }
     var h = '<div class="stack" style="gap:6px"><div class="eyebrow">What\'s Ahead</div><h1 style="font-size:34px;font-weight:800">Season Schedule</h1><div class="sub">Tap any game, scrimmage or assignment for the details.</div></div>';
     h += filterBar("filter", f, [["games", "Games"], ["scrimmages", "Scrimmages"], ["assignments", "Assignments"], ["all", "All"]]);
     h += '<div>' + groupedList(up, false) + '</div>';
-    h += '<div class="wkline past">Final Whistle</div><button class="panel row" data-go="film" style="width:100%;border:2px dashed var(--line);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer"><span class="stack" style="gap:4px"><b style="font-size:17px">Already Played? Review It In The Film Room</b><span class="small">' + pastN + ' past games, scrimmages and assignments</span></span><span class="chev" style="font-size:26px">›</span></button>';
+    h += '<div class="wkline past">Final Whistle</div><button class="panel row" data-go="film" style="width:100%;border:2px dashed rgba(255,255,255,.6);background:rgba(7,15,36,.35);color:inherit;font:inherit;text-align:left;cursor:pointer"><span class="stack" style="gap:4px"><b style="font-size:17px">Already Played? Review It In The Film Room</b><span class="small">' + pastN + ' past games, scrimmages and assignments</span></span><span class="chev" style="font-size:26px">›</span></button>';
     return h;
   }
 
