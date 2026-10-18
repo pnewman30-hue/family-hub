@@ -338,14 +338,15 @@ button.asg:first-child { border-top: 0; }
     var evs = events(), next = evs[0], t = today(), h = "";
     var tonight = [];
     evs.forEach(function (e) { practicesFor(e).forEach(function (p) { if (p.date === t) tonight.push(p); }); });
-    var sub = tonight.length ? (tonight.length === 1 ? "One practice tonight." : tonight.length + " practices tonight.") : "No practice tonight. Enjoy it.";
-    h += header("Hey Ella.", sub);
+    var sub = tonight.length ? (tonight.length === 1 ? "One practice session tonight." : tonight.length + " practice sessions tonight.") : "No practice tonight. Enjoy it.";
+    h += header("Hey Ella!", sub);
     if (next) {
-      var d = days(t, next.due), label = next.kind === "test" ? "Next Game" : "Next Scrimmage";
+      var d = days(t, next.due), label = next.kind === "test" ? "You have a big game coming up!" : "Scrimmage coming up!";
+      var fullTitle = low(next.title).indexOf(low(next.className)) === 0 ? next.title : next.className + " " + next.title;
       var ps = practicesFor(next).filter(function (p) { return p.date === t; })[0];
-      h += '<div class="goal"><div class="card"><div class="bar"><span>' + label + '</span><span>' + esc(next.className) + (next.kind === "test" ? " Test" : " Quiz") + '</span></div>' +
-        '<div class="body"><div class="stack" style="gap:8px"><div class="title">' + esc(next.title) + '</div><div class="sub">' + (d === 0 ? "Kickoff today" : "Kickoff " + esc(longDay(next.due))) + '</div>' +
-        '<div style="font-size:17px">' + (ps ? "Tonight's practice is " + ps.mins + " minutes." : d === 0 ? "Game day. Quick warm-up, then go get it." : "Practice starts " + esc(wk(practicesFor(next)[0] ? practicesFor(next)[0].date : next.due)) + ".") + '</div></div>' +
+      h += '<div class="goal"><div class="card"><div class="bar"><span>' + label + '</span><span>' + esc(next.className) + '</span></div>' +
+        '<div class="body"><div class="stack" style="gap:8px"><div class="title">' + esc(fullTitle) + '</div><div class="sub">' + (d === 0 ? "Kickoff today" : "Kickoff " + esc(longDay(next.due))) + '</div>' +
+        '<div style="font-size:17px">' + (ps ? "Tonight's practice session is " + ps.mins + " minutes." : d === 0 ? "Game day. Quick warm-up, then go get it." : "Practice starts " + esc(wk(practicesFor(next)[0] ? practicesFor(next)[0].date : next.due)) + ".") + '</div></div>' +
         '<div class="score"><b>' + d + '</b><span>' + (d === 1 ? "DAY TO GO" : "DAYS TO GO") + '</span></div></div>' +
         '<div class="foot"><button class="btn gold" data-go="plan" data-ev="' + esc(next.id) + '">Ask Coach</button></div></div></div>';
     } else {
