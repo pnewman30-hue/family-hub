@@ -733,7 +733,7 @@ button.asg:first-child { border-top: 0; }
     return "Grades from ParentVUE, updated " + when + ". Due dates from ParentVUE and teacher posts in CTLS.";
   }
 
-  var VIEWS = { home: ["Home", viewHome], plan: ["Coach", viewPlan], trophy: ["Standings", viewTrophy], grades: ["Grades", viewGrades], schedule: ["Schedule", viewSchedule], film: ["Film Room", viewFilm] };
+  var VIEWS = { home: ["Home", viewHome], plan: ["Coach", viewPlan], trophy: ["Standings", viewTrophy], grades: ["Stats", viewGrades], schedule: ["Schedule", viewSchedule], film: ["Film Room", viewFilm] };
   function renderTabs() {
     document.getElementById("tabs").innerHTML = Object.keys(VIEWS).map(function (k) {
       return '<button data-go="' + k + '"' + (ui.view === k || (ui.view === "detail" && ui.back === k) ? ' aria-current="page"' : '') + '>' + navIcons[k] + VIEWS[k][0] + '</button>';
