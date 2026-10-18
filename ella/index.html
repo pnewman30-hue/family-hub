@@ -512,6 +512,32 @@ button.asg:first-child { border-top: 0; }
     [0, 1].forEach(function (n) { var c = champsFor(n); if (c.over) ch += c.list.length; });
     return { w: w, l: l, t: d, goals: awards().balls, tourn: tw, champs: ch };
   }
+  function seasonOf(due) {
+    var ps = allPeriods(), y = ps[0] && ps[0].start ? parseInt(ps[0].start.slice(0, 4), 10) : new Date().getFullYear();
+    var winterStart = ps[2] && !ps[2].placeholder ? ps[2].start : y + "-11-01";
+    var springStart = ps[4] && !ps[4].placeholder ? ps[4].start : (y + 1) + "-03-01";
+    return due < winterStart ? 0 : due < springStart ? 1 : 2;
+  }
+  function seasonGames(n) {
+    var r = { game: [0, 0, 0], scrim: [0, 0, 0] };
+    allAssignments().forEach(function (a) {
+      if (a.pct == null || !a.due) return;
+      var k = kindOf(a); if (k === "work" || seasonOf(a.due) !== n) return;
+      var b = k === "test" ? r.game : r.scrim;
+      b[a.pct >= 90 ? 0 : a.pct >= 80 ? 2 : 1]++;
+    });
+    r.all = [r.game[0] + r.scrim[0], r.game[1] + r.scrim[1], r.game[2] + r.scrim[2]];
+    return r;
+  }
+  function seasonRecordPanel(sea, n) {
+    var r = seasonGames(n), tot = r.all[0] + r.all[1] + r.all[2];
+    var dash = '<span style="font-size:26px;font-weight:800;color:var(--dim)">\u2013</span>';
+    if (!tot) return '<div class="panel row"><div class="stack" style="gap:4px"><div style="font-size:19px;font-weight:800">' + sea.name + ' Season Record</div><div class="small">No games or scrimmages graded yet. Every one counts once the season starts.</div></div><span class="pill">0\u20130\u20130</span></div>';
+    var f = function (x) { return x[0] + "\u2013" + x[1] + "\u2013" + x[2]; };
+    return '<div class="panel stack" style="gap:10px;border:2px solid var(--gold)"><div class="row"><div style="font-size:19px;font-weight:800">' + sea.name + ' Season Record</div><span class="small" style="font-weight:800">W\u2013L\u2013T</span></div>' +
+      '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:40px;font-weight:800;color:var(--good)">' + r.all[0] + ' W</span>' + dash + '<span style="font-size:40px;font-weight:800;color:var(--muted)">' + r.all[1] + ' L</span>' + dash + '<span style="font-size:40px;font-weight:800;color:var(--gold)">' + r.all[2] + ' T</span></div>' +
+      '<div class="row" style="justify-content:flex-start;gap:22px"><span><b>Games (tests)</b> <span class="small">' + f(r.game) + '</span></span><span><b>Scrimmages (quizzes)</b> <span class="small">' + f(r.scrim) + '</span></span></div></div>';
+  }
   function tournamentPanel(p, i) {
     var r = periodResult(p, i), state = r.state, wins = r.wins, close = r.close, losses = r.losses;
     var hasRecord = state !== "next" && (wins.length + losses + r.ties) > 0;
@@ -547,14 +573,12 @@ button.asg:first-child { border-top: 0; }
   function viewTrophy() {
     var aw = awards(), evs = events(), st = seasonStats(), ps = allPeriods(), t = today();
     var h = '<div class="stack" style="gap:6px"><div class="eyebrow">Standings</div><h1 style="font-size:34px;font-weight:800">Lassiter 9th Grade Season Standings</h1><div class="sub">Look how much you\'ve already done.</div></div>';
-    h += statBoard(st) + '<div class="small">Season record counts games and scrimmages. An A (90+) is a win, a B (80 to 89) is a tie, and below 80 is a loss. Goals are perfect assignments and finished practices.</div>';
+    h += statBoard(st) + '<div class="small">Season record counts games (tests) and scrimmages (quizzes) for the whole year. An A (90+) is a win, a B (80 to 89) is a tie, and below 80 is a loss. Goals are perfect assignments and finished practices.</div>';
     h += '<div class="small" style="margin-top:-6px">Tournaments are the six-week grading periods. Finish one with an A in a class to win it. A B is a tie. Finish the semester at 90+ to win the championship.</div>';
     SEASON_PLAN.forEach(function (sea) {
       var first = ps[sea.periods[0]], last = ps[sea.periods[sea.periods.length - 1]];
       var live = sea.periods.some(function (i) { return periodResult(ps[i], i).state === "live"; });
-      var w = 0, l = 0, d = 0;
-      sea.periods.forEach(function (i) { var r = periodResult(ps[i], i); if (r.state !== "next") { w += r.wins.length; l += r.losses; d += r.ties; } });
-      h += '<div class="stack" style="gap:10px"><div class="wkline' + (live ? "" : " past") + '" style="font-size:15px">' + sea.name + ' Season' + (live ? " · Now" : "") + '</div><div class="row"><span class="small">' + sea.note + '</span>' + (w + l + d ? '<span class="small" style="font-weight:800">Tournament record ' + w + '–' + l + '–' + d + '</span>' : '') + '</div>';
+      h += '<div class="stack" style="gap:10px"><div class="wkline' + (live ? "" : " past") + '" style="font-size:15px">' + sea.name + ' Season' + (live ? " · Now" : "") + '</div><div class="row"><span class="small">' + sea.note + '</span></div>' + seasonRecordPanel(sea, SEASON_PLAN.indexOf(sea)) + '';
       sea.periods.forEach(function (i) {
         if (sea.champ === 0 && i === 3) h += champPanel(0);
         h += tournamentPanel(ps[i], i);
