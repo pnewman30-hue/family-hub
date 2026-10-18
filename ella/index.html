@@ -106,6 +106,15 @@ nav.tabs svg { width: 22px; height: 22px; }
 .board div + div { border-left: 1px solid var(--line); }
 .board b { display: block; font-size: 46px; line-height: 1; color: var(--gold); }
 .board span { font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--muted); }
+.board.four { grid-template-columns: repeat(4, minmax(0,1fr)); }
+.board.four b { font-size: 40px; }
+.hstats { margin-left: auto; display: grid; grid-template-columns: repeat(4, auto); gap: 4px; background: #000; border: 2px solid var(--gold); border-radius: 16px; padding: 10px 6px; color: inherit; font: inherit; cursor: pointer; }
+.hstats div { padding: 0 10px; text-align: center; }
+.hstats div + div { border-left: 1px solid var(--line); }
+.hstats b { display: block; font-size: 26px; line-height: 1.05; color: var(--gold); }
+.hstats span { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--muted); }
+.top { flex-wrap: wrap; }
+@media (max-width: 640px) { .hstats { margin-left: 0; width: 100%; grid-template-columns: repeat(4, minmax(0,1fr)); } .hstats div { padding: 0 4px; } .board.four b { font-size: 30px; } .board.four span { font-size: 9px; } }
 .shelf { position: relative; border: 10px solid var(--white); border-bottom: 0; border-radius: 6px 6px 0 0; background-color: #0A1530;
   background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.09) 0 1px, transparent 1px 22px), repeating-linear-gradient(-45deg, rgba(255,255,255,.09) 0 1px, transparent 1px 22px); padding: 20px 10px 0; }
 .shelf-grass { height: 10px; background: #1E5A39; border-radius: 0 0 6px 6px; }
@@ -330,8 +339,8 @@ button.asg:first-child { border-top: 0; }
   }
 
   /* ---------- views ---------- */
-  function header(title, sub) {
-    return '<div class="top">' + crest + '<div class="stack" style="gap:4px"><div class="eyebrow">' + esc(fmt(today(), { weekday: "long", month: "short", day: "numeric" })) + '</div><h1>' + esc(title) + '</h1>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : '') + '</div></div>';
+  function header(title, sub, right) {
+    return '<div class="top">' + crest + '<div class="stack" style="gap:4px"><div class="eyebrow">' + esc(fmt(today(), { weekday: "long", month: "short", day: "numeric" })) + '</div><h1>' + esc(title) + '</h1>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : '') + '</div>' + (right || '') + '</div>';
   }
 
   function viewHome() {
@@ -339,7 +348,9 @@ button.asg:first-child { border-top: 0; }
     var tonight = [];
     evs.forEach(function (e) { practicesFor(e).forEach(function (p) { if (p.date === t) tonight.push(p); }); });
     var sub = tonight.length ? (tonight.length === 1 ? "One practice session tonight." : tonight.length + " practice sessions tonight.") : "No practice tonight. Enjoy it.";
-    h += header("Hey Ella!", sub);
+    var st = seasonStats();
+    var hs = '<button class="hstats" data-go="trophy" aria-label="Open standings">' + [[st.w + "\u2013" + st.l, "RECORD"], [st.goals, "GOALS"], [st.tourn, "TOURNEYS"], [st.champs, "TITLES"]].map(function (c) { return '<div><b>' + esc(String(c[0])) + '</b><span>' + c[1] + '</span></div>'; }).join("") + '</button>';
+    h += header("Hey Ella!", sub, hs);
     if (next) {
       var d = days(t, next.due), label = next.kind === "test" ? "You have a big game coming up!" : "Scrimmage coming up!";
       var fullTitle = low(next.title).indexOf(low(next.className)) === 0 ? next.title : next.className + " " + next.title;
@@ -457,11 +468,100 @@ button.asg:first-child { border-top: 0; }
     return h;
   }
 
+  /* ---------- standings ---------- */
+  var SEASON_PLAN = [
+    { name: "Fall", note: "August to October", periods: [0, 1] },
+    { name: "Winter", note: "November to February", periods: [2, 3], champ: 0 },
+    { name: "Spring", note: "February to May", periods: [4, 5], champ: 1 }
+  ];
+  var LATER = ["4th Six Weeks", "5th Six Weeks", "6th Six Weeks"], LATER_NOTE = ["Starts in January", "Starts in the spring", "Ends in May"];
+  function allPeriods() {
+    var m = D.meta || {}, list = Array.isArray(m.periods) ? m.periods.slice() : [];
+    for (var i = list.length; i < 6; i++) list.push({ name: LATER[i - 3] || ((i + 1) + "th Six Weeks"), placeholder: LATER_NOTE[i - 3] || "Coming later" });
+    return list;
+  }
+  function periodResult(p, i) {
+    var m = D.meta || {}, t = today(), graded = (D.classes || []).filter(function (c) { return c.graded; });
+    var state = p.placeholder ? "next" : t > p.end ? "done" : t >= p.start ? "live" : "next";
+    var wins = [], close = [], losses = 0;
+    var saved = m.periodResults && m.periodResults[String(i)] ? m.periodResults[String(i)].grades || {} : null;
+    if (state === "done") {
+      graded.forEach(function (c) {
+        var v = saved && saved["p" + c.period] != null ? saved["p" + c.period] : (i === 0 ? c.firstProgressPct : null);
+        if (v != null) { if (v >= 90) wins.push([shortName(c), v]); else losses++; }
+      });
+    } else if (state === "live") {
+      graded.forEach(function (c) { if (c.gradePct != null) { if (c.gradePct >= 90) wins.push([shortName(c), c.gradePct]); else { losses++; if (c.gradePct >= 85) close.push([shortName(c), c.gradePct]); } } });
+    }
+    return { state: state, wins: wins, close: close, losses: losses };
+  }
+  function semesterEnd(n) { var ps = allPeriods(); var p = ps[n * 3 + 2]; return p && !p.placeholder ? p.end : null; }
+  function champsFor(n) {
+    var end = semesterEnd(n);
+    if (!end || today() <= end) return { over: false, end: end, list: n === 0 ? (D.classes || []).filter(function (c) { return c.graded && c.gradePct != null && c.gradePct >= 90; }) : [] };
+    var saved = (D.meta || {}).periodResults && D.meta.periodResults[String(n * 3 + 2)];
+    var g = saved ? saved.grades || {} : null;
+    return { over: true, end: end, list: (D.classes || []).filter(function (c) { var v = g && g["p" + c.period] != null ? g["p" + c.period] : c.gradePct; return c.graded && v != null && v >= 90; }) };
+  }
+  function seasonStats() {
+    var w = 0, l = 0;
+    allAssignments().forEach(function (a) { if (a.pct == null) return; var k = kindOf(a); if (k === "work") return; if (a.pct >= 80) w++; else l++; });
+    var tw = 0;
+    allPeriods().forEach(function (p, i) { var r = periodResult(p, i); if (r.state === "done") tw += r.wins.length; });
+    var ch = 0;
+    [0, 1].forEach(function (n) { var c = champsFor(n); if (c.over) ch += c.list.length; });
+    return { w: w, l: l, goals: awards().balls, tourn: tw, champs: ch };
+  }
+  function tournamentPanel(p, i) {
+    var r = periodResult(p, i), state = r.state, wins = r.wins, close = r.close, losses = r.losses;
+    var hasRecord = state !== "next" && (wins.length + losses) > 0;
+    var record = hasRecord ? '<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:var(--good)">' + wins.length + ' W</span><span style="font-size:26px;font-weight:800;color:var(--dim)">–</span><span style="font-size:34px;font-weight:800;color:var(--muted)">' + losses + ' L</span><span class="small">' + (state === "done" ? "Final record" : "Record so far") + '</span></div>' : '';
+    var tag = p.placeholder ? p.placeholder.toUpperCase() : state === "done" ? "FINAL" : state === "live" ? "IN PROGRESS · ENDS " + fmt(p.end).toUpperCase() : "STARTS " + fmt(p.start).toUpperCase();
+    var h = '<div class="panel stack" style="gap:12px"><div class="row"><div style="font-size:19px;font-weight:800">' + esc(p.name) + ' Tournament</div><span class="pill' + (state === "live" ? " gold" : "") + '">' + tag + '</span></div>' + record;
+    if (state === "done") {
+      h += wins.length ? '<div class="awards">' + wins.map(function (w) { return '<div class="award" style="padding-bottom:0">' + cup(60) + '<b>' + Math.round(w[1]) + '</b><small>' + esc(w[0]) + '</small></div>'; }).join("") + '</div>'
+        : '<div class="small">No 90s this round. Next tournament is a fresh start.</div>';
+    } else if (state === "live") {
+      h += (wins.length ? '<div class="small" style="color:var(--good);font-weight:700">On track to win: ' + esc(wins.map(function (w) { return w[0] + " (" + Math.round(w[1]) + ")"; }).join(", ")) + '</div>' : '') +
+        (close.length ? '<div class="small" style="color:var(--mid);font-weight:700">Within reach: ' + esc(close.map(function (w) { return w[0] + " (" + Math.round(w[1]) + ")"; }).join(", ")) + '</div>' : '') +
+        (!wins.length && !close.length ? '<div class="small">Every class starts at zero wins. Get a class to 90 to put a trophy in play.</div>' : '');
+    } else {
+      h += '<div class="small">Coming up. Every class can win this one.</div>';
+    }
+    return h + '</div>';
+  }
+  function champPanel(n) {
+    var c = champsFor(n), names = c.list.map(shortName).join(", ");
+    var title = (n === 0 ? "Fall Semester" : "Spring Semester") + " Championship";
+    var txt = c.over ? (c.list.length ? "Champion in " + names + "!" : "Season over. A new championship starts next semester.")
+      : n === 1 && !c.end ? "Finish a class at 90+ at the end of the year to win it."
+      : "Finish a class at 90+ by " + (c.end ? fmt(c.end, { month: "long", day: "numeric" }) : "the end of the semester") + ". " + (c.list.length ? "On track in " + names + "." : "Pick one class to make your title run.");
+    return '<div class="panel row" style="justify-content:flex-start;gap:16px;background:#1A2F63">' + cup(56, true) + '<div class="stack" style="gap:4px"><div style="font-size:19px;font-weight:800">' + title + '</div><div class="small">' + esc(txt) + '</div></div></div>';
+  }
+  function statBoard(st, big) {
+    var cells = [[st.w + "–" + st.l, "SEASON RECORD"], [st.goals, "GOALS SCORED"], [st.tourn, "TOURNAMENTS WON"], [st.champs, "CHAMPIONSHIPS"]];
+    return '<div class="board four">' + cells.map(function (c) { return '<div><b>' + esc(String(c[0])) + '</b><span>' + c[1] + '</span></div>'; }).join("") + '</div>';
+  }
+
   function viewTrophy() {
-    var aw = awards(), evs = events();
-    var h = '<div class="stack" style="gap:6px"><div class="eyebrow">Trophy Case</div><h1 style="font-size:34px;font-weight:800">Ella\'s Season So Far</h1><div class="sub">Look how much you\'ve already done.</div></div>';
-    h += '<div class="board"><div><b>' + aw.trophies.length + '</b><span>TROPHIES · GAMES</span></div><div><b>' + aw.medals.length + '</b><span>MEDALS · SCRIMMAGES</span></div><div><b>' + aw.balls + '</b><span>BALLS · PRACTICES</span></div></div>';
-    h += viewTournaments();
+    var aw = awards(), evs = events(), st = seasonStats(), ps = allPeriods(), t = today();
+    var h = '<div class="stack" style="gap:6px"><div class="eyebrow">Standings</div><h1 style="font-size:34px;font-weight:800">Ella\'s Season So Far</h1><div class="sub">Look how much you\'ve already done.</div></div>';
+    h += statBoard(st) + '<div class="small">Season record counts games and scrimmages: 80 or higher is a win. Goals are perfect assignments and finished practices.</div>';
+    h += '<div class="small" style="margin-top:-6px">Tournaments are the six-week grading periods. Finish one at 90+ in a class to win it. Finish the semester at 90+ to win the championship.</div>';
+    SEASON_PLAN.forEach(function (sea) {
+      var first = ps[sea.periods[0]], last = ps[sea.periods[sea.periods.length - 1]];
+      var live = sea.periods.some(function (i) { return periodResult(ps[i], i).state === "live"; });
+      var w = 0, l = 0;
+      sea.periods.forEach(function (i) { var r = periodResult(ps[i], i); if (r.state !== "next") { w += r.wins.length; l += r.losses; } });
+      h += '<div class="stack" style="gap:10px"><div class="wkline' + (live ? "" : " past") + '" style="font-size:15px">' + sea.name + ' Season' + (live ? " · Now" : "") + '</div><div class="row"><span class="small">' + sea.note + '</span>' + (w + l ? '<span class="small" style="font-weight:800">Tournament record ' + w + '–' + l + '</span>' : '') + '</div>';
+      sea.periods.forEach(function (i) {
+        if (sea.champ === 0 && i === 3) h += champPanel(0);
+        h += tournamentPanel(ps[i], i);
+      });
+      if (sea.champ === 1) h += champPanel(1);
+      h += '</div>';
+    });
+    h += '<div class="stack" style="gap:6px;margin-top:10px"><div class="eyebrow">Trophy Case</div><div class="board"><div><b>' + aw.trophies.length + '</b><span>TROPHIES · GAMES</span></div><div><b>' + aw.medals.length + '</b><span>MEDALS · SCRIMMAGES</span></div><div><b>' + aw.balls + '</b><span>BALLS · GOALS</span></div></div></div>';
     h += '<div class="stack" style="gap:8px"><h2 class="sec">Trophies · Tests Scored 80+</h2>';
     if (aw.trophies.length) h += '<div class="shelf"><div class="awards">' + aw.trophies.map(function (a) { return '<div class="award">' + trophy(70) + '<b>' + Math.round(a.pct) + '</b><small>' + esc(shortName(a.cls)) + '<br>' + esc(a.name) + '</small></div>'; }).join("") + '</div></div><div class="shelf-grass"></div>';
     else h += '<div class="empty">Your first trophy goes here after a test scored 80 or higher.</div>';
@@ -477,51 +577,6 @@ button.asg:first-child { border-top: 0; }
     }).join("") + '</div>';
     return h;
   }
-
-  function viewTournaments() {
-    var m = D.meta || {}, t = today(), periods = Array.isArray(m.periods) ? m.periods : [];
-    var graded = (D.classes || []).filter(function (c) { return c.graded; });
-    var h = '<div class="stack" style="gap:8px"><h2 class="sec">Tournaments · Grading Periods</h2><div class="small">Finish a grading period at 90 or higher in a class to win that tournament. Finish the semester at 90 or higher to win the championship.</div>';
-    var won = 0;
-    periods.forEach(function (p, i) {
-      var state = t > p.end ? "done" : t >= p.start ? "live" : "next";
-      var wins = [], close = [], losses = 0;
-      var saved = m.periodResults && m.periodResults[String(i)] ? m.periodResults[String(i)].grades || {} : null;
-      if (state === "done") {
-        graded.forEach(function (c) {
-          var v = saved && saved["p" + c.period] != null ? saved["p" + c.period] : (i === 0 ? c.firstProgressPct : null);
-          if (v != null) { if (v >= 90) wins.push([shortName(c), v]); else losses++; }
-        });
-      } else if (state === "live") {
-        graded.forEach(function (c) { if (c.gradePct != null) { if (c.gradePct >= 90) wins.push([shortName(c), c.gradePct]); else { losses++; if (c.gradePct >= 85) close.push([shortName(c), c.gradePct]); } } });
-      }
-      var hasRecord = state !== "next" && (wins.length + losses) > 0;
-      var record = hasRecord ? '<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:var(--good)">' + wins.length + ' W</span><span style="font-size:26px;font-weight:800;color:var(--dim)">\u2013</span><span style="font-size:34px;font-weight:800;color:var(--muted)">' + losses + ' L</span><span class="small">' + (state === "done" ? "Final record" : "Record so far") + '</span></div>' : '';
-      if (state === "done") won += wins.length;
-      var tag = state === "done" ? "FINAL" : state === "live" ? "IN PROGRESS · ENDS " + fmt(p.end).toUpperCase() : "STARTS " + fmt(p.start).toUpperCase();
-      h += '<div class="panel stack" style="gap:12px"><div class="row"><div style="font-size:19px;font-weight:800">' + esc(p.name) + ' Tournament</div><span class="pill' + (state === "live" ? " gold" : "") + '">' + tag + '</span></div>' + record;
-      if (state === "done") {
-        h += wins.length ? '<div class="awards">' + wins.map(function (w) { return '<div class="award" style="padding-bottom:0">' + cup(60) + '<b>' + Math.round(w[1]) + '</b><small>' + esc(w[0]) + '</small></div>'; }).join("") + '</div>'
-          : '<div class="small">' + (i === 0 ? "No 90s this round. Next tournament is a fresh start." : "Results show here once the period wraps up.") + '</div>';
-      } else if (state === "live") {
-        h += (wins.length ? '<div class="small" style="color:var(--good);font-weight:700">On track to win: ' + esc(wins.map(function (w) { return w[0] + " (" + Math.round(w[1]) + ")"; }).join(", ")) + '</div>' : '') +
-          (close.length ? '<div class="small" style="color:var(--mid);font-weight:700">Within reach: ' + esc(close.map(function (w) { return w[0] + " (" + Math.round(w[1]) + ")"; }).join(", ")) + '</div>' : '') +
-          (!wins.length && !close.length ? '<div class="small">Every class starts at zero wins. Get a class to 90 to put a trophy in play.</div>' : '');
-      } else {
-        h += '<div class="small">Coming up. Every class can win this one.</div>';
-      }
-      h += '</div>';
-    });
-    var semEnd = periods.length ? periods[periods.length - 1].end : null;
-    var champs = graded.filter(function (c) { return c.gradePct != null && c.gradePct >= 90; });
-    h += '<div class="panel row" style="justify-content:flex-start;gap:16px;background:#1A2F63">' + cup(56, true) + '<div class="stack" style="gap:4px"><div style="font-size:19px;font-weight:800">Semester Championship</div><div class="small">' +
-      (semEnd && t > semEnd ? (champs.length ? "Champion in " + esc(champs.map(shortName).join(", ")) + "!" : "Season over. A new championship starts next semester.") :
-        "Finish a class at 90+ by " + esc(semEnd ? fmt(semEnd, { month: "long", day: "numeric" }) : "the end of the semester") + ". " + (champs.length ? "On track in " + esc(champs.map(shortName).join(", ")) + "." : "Pick one class to make your title run.")) +
-      '</div></div></div></div>';
-    tournamentWins = won;
-    return h;
-  }
-  var tournamentWins = 0;
   function viewGrades() {
     var m = D.meta || {};
     var h = '<div class="stack" style="gap:6px"><div class="eyebrow">My Stats</div><h1 style="font-size:34px;font-weight:800">Grades</h1><div class="sub">' + esc(m.currentPeriod || "") + ' · semester-to-date, from ParentVUE</div></div><div class="stack" style="gap:10px">';
@@ -652,7 +707,7 @@ button.asg:first-child { border-top: 0; }
     return "Grades from ParentVUE, updated " + when + ". Due dates from ParentVUE and teacher posts in CTLS.";
   }
 
-  var VIEWS = { home: ["Home", viewHome], plan: ["Coach", viewPlan], trophy: ["Trophies", viewTrophy], grades: ["Grades", viewGrades], schedule: ["Schedule", viewSchedule], film: ["Film Room", viewFilm] };
+  var VIEWS = { home: ["Home", viewHome], plan: ["Coach", viewPlan], trophy: ["Standings", viewTrophy], grades: ["Grades", viewGrades], schedule: ["Schedule", viewSchedule], film: ["Film Room", viewFilm] };
   function renderTabs() {
     document.getElementById("tabs").innerHTML = Object.keys(VIEWS).map(function (k) {
       return '<button data-go="' + k + '"' + (ui.view === k || (ui.view === "detail" && ui.back === k) ? ' aria-current="page"' : '') + '>' + navIcons[k] + VIEWS[k][0] + '</button>';
