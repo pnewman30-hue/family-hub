@@ -349,7 +349,7 @@ button.asg:first-child { border-top: 0; }
     evs.forEach(function (e) { practicesFor(e).forEach(function (p) { if (p.date === t) tonight.push(p); }); });
     var sub = tonight.length ? (tonight.length === 1 ? "One practice session tonight." : tonight.length + " practice sessions tonight.") : "No practice tonight. Enjoy it.";
     var st = seasonStats();
-    var hs = '<button class="hstats" data-go="trophy" aria-label="Open standings">' + [[st.w + "\u2013" + st.l, "RECORD"], [st.goals, "GOALS"], [st.tourn, "TOURNEYS"], [st.champs, "TITLES"]].map(function (c) { return '<div><b>' + esc(String(c[0])) + '</b><span>' + c[1] + '</span></div>'; }).join("") + '</button>';
+    var hs = '<button class="hstats" data-go="trophy" aria-label="Open standings">' + [[st.w + "\u2013" + st.l + "\u2013" + st.t, "W\u2013L\u2013T"], [st.goals, "GOALS"], [st.tourn, "TOURNEYS"], [st.champs, "TITLES"]].map(function (c) { return '<div><b>' + esc(String(c[0])) + '</b><span>' + c[1] + '</span></div>'; }).join("") + '</button>';
     h += header("Hey Ella!", sub, hs);
     if (next) {
       var d = days(t, next.due), label = next.kind === "test" ? "You have a big game coming up!" : "Scrimmage coming up!";
@@ -483,17 +483,17 @@ button.asg:first-child { border-top: 0; }
   function periodResult(p, i) {
     var m = D.meta || {}, t = today(), graded = (D.classes || []).filter(function (c) { return c.graded; });
     var state = p.placeholder ? "next" : t > p.end ? "done" : t >= p.start ? "live" : "next";
-    var wins = [], close = [], losses = 0;
+    var wins = [], close = [], losses = 0, ties = 0;
     var saved = m.periodResults && m.periodResults[String(i)] ? m.periodResults[String(i)].grades || {} : null;
     if (state === "done") {
       graded.forEach(function (c) {
         var v = saved && saved["p" + c.period] != null ? saved["p" + c.period] : (i === 0 ? c.firstProgressPct : null);
-        if (v != null) { if (v >= 90) wins.push([shortName(c), v]); else losses++; }
+        if (v != null) { if (v >= 90) wins.push([shortName(c), v]); else if (v >= 80) ties++; else losses++; }
       });
     } else if (state === "live") {
-      graded.forEach(function (c) { if (c.gradePct != null) { if (c.gradePct >= 90) wins.push([shortName(c), c.gradePct]); else { losses++; if (c.gradePct >= 85) close.push([shortName(c), c.gradePct]); } } });
+      graded.forEach(function (c) { if (c.gradePct != null) { if (c.gradePct >= 90) wins.push([shortName(c), c.gradePct]); else { if (c.gradePct >= 80) ties++; else losses++; if (c.gradePct >= 85) close.push([shortName(c), c.gradePct]); } } });
     }
-    return { state: state, wins: wins, close: close, losses: losses };
+    return { state: state, wins: wins, close: close, losses: losses, ties: ties };
   }
   function semesterEnd(n) { var ps = allPeriods(); var p = ps[n * 3 + 2]; return p && !p.placeholder ? p.end : null; }
   function champsFor(n) {
@@ -504,18 +504,19 @@ button.asg:first-child { border-top: 0; }
     return { over: true, end: end, list: (D.classes || []).filter(function (c) { var v = g && g["p" + c.period] != null ? g["p" + c.period] : c.gradePct; return c.graded && v != null && v >= 90; }) };
   }
   function seasonStats() {
-    var w = 0, l = 0;
-    allAssignments().forEach(function (a) { if (a.pct == null) return; var k = kindOf(a); if (k === "work") return; if (a.pct >= 80) w++; else l++; });
+    var w = 0, l = 0, d = 0;
+    allAssignments().forEach(function (a) { if (a.pct == null) return; var k = kindOf(a); if (k === "work") return; if (a.pct >= 90) w++; else if (a.pct >= 80) d++; else l++; });
     var tw = 0;
     allPeriods().forEach(function (p, i) { var r = periodResult(p, i); if (r.state === "done") tw += r.wins.length; });
     var ch = 0;
     [0, 1].forEach(function (n) { var c = champsFor(n); if (c.over) ch += c.list.length; });
-    return { w: w, l: l, goals: awards().balls, tourn: tw, champs: ch };
+    return { w: w, l: l, t: d, goals: awards().balls, tourn: tw, champs: ch };
   }
   function tournamentPanel(p, i) {
     var r = periodResult(p, i), state = r.state, wins = r.wins, close = r.close, losses = r.losses;
-    var hasRecord = state !== "next" && (wins.length + losses) > 0;
-    var record = hasRecord ? '<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:var(--good)">' + wins.length + ' W</span><span style="font-size:26px;font-weight:800;color:var(--dim)">–</span><span style="font-size:34px;font-weight:800;color:var(--muted)">' + losses + ' L</span><span class="small">' + (state === "done" ? "Final record" : "Record so far") + '</span></div>' : '';
+    var hasRecord = state !== "next" && (wins.length + losses + r.ties) > 0;
+    var dash = '<span style="font-size:26px;font-weight:800;color:var(--dim)">–</span>';
+    var record = hasRecord ? '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:34px;font-weight:800;color:var(--good)">' + wins.length + ' W</span>' + dash + '<span style="font-size:34px;font-weight:800;color:var(--muted)">' + losses + ' L</span>' + dash + '<span style="font-size:34px;font-weight:800;color:var(--gold)">' + r.ties + ' T</span><span class="small">' + (state === "done" ? "Final record" : "Record so far") + '</span></div>' : '';
     var tag = p.placeholder ? p.placeholder.toUpperCase() : state === "done" ? "FINAL" : state === "live" ? "IN PROGRESS · ENDS " + fmt(p.end).toUpperCase() : "STARTS " + fmt(p.start).toUpperCase();
     var h = '<div class="panel stack" style="gap:12px"><div class="row"><div style="font-size:19px;font-weight:800">' + esc(p.name) + ' Tournament</div><span class="pill' + (state === "live" ? " gold" : "") + '">' + tag + '</span></div>' + record;
     if (state === "done") {
@@ -539,21 +540,21 @@ button.asg:first-child { border-top: 0; }
     return '<div class="panel row" style="justify-content:flex-start;gap:16px;background:#1A2F63">' + cup(56, true) + '<div class="stack" style="gap:4px"><div style="font-size:19px;font-weight:800">' + title + '</div><div class="small">' + esc(txt) + '</div></div></div>';
   }
   function statBoard(st, big) {
-    var cells = [[st.w + "–" + st.l, "SEASON RECORD"], [st.goals, "GOALS SCORED"], [st.tourn, "TOURNAMENTS WON"], [st.champs, "CHAMPIONSHIPS"]];
+    var cells = [[st.w + "–" + st.l + "–" + st.t, "RECORD W–L–T"], [st.goals, "GOALS SCORED"], [st.tourn, "TOURNAMENTS WON"], [st.champs, "CHAMPIONSHIPS"]];
     return '<div class="board four">' + cells.map(function (c) { return '<div><b>' + esc(String(c[0])) + '</b><span>' + c[1] + '</span></div>'; }).join("") + '</div>';
   }
 
   function viewTrophy() {
     var aw = awards(), evs = events(), st = seasonStats(), ps = allPeriods(), t = today();
     var h = '<div class="stack" style="gap:6px"><div class="eyebrow">Standings</div><h1 style="font-size:34px;font-weight:800">Ella\'s Season So Far</h1><div class="sub">Look how much you\'ve already done.</div></div>';
-    h += statBoard(st) + '<div class="small">Season record counts games and scrimmages: 80 or higher is a win. Goals are perfect assignments and finished practices.</div>';
-    h += '<div class="small" style="margin-top:-6px">Tournaments are the six-week grading periods. Finish one at 90+ in a class to win it. Finish the semester at 90+ to win the championship.</div>';
+    h += statBoard(st) + '<div class="small">Season record counts games and scrimmages. An A (90+) is a win, a B (80 to 89) is a tie, and below 80 is a loss. Goals are perfect assignments and finished practices.</div>';
+    h += '<div class="small" style="margin-top:-6px">Tournaments are the six-week grading periods. Finish one with an A in a class to win it. A B is a tie. Finish the semester at 90+ to win the championship.</div>';
     SEASON_PLAN.forEach(function (sea) {
       var first = ps[sea.periods[0]], last = ps[sea.periods[sea.periods.length - 1]];
       var live = sea.periods.some(function (i) { return periodResult(ps[i], i).state === "live"; });
-      var w = 0, l = 0;
-      sea.periods.forEach(function (i) { var r = periodResult(ps[i], i); if (r.state !== "next") { w += r.wins.length; l += r.losses; } });
-      h += '<div class="stack" style="gap:10px"><div class="wkline' + (live ? "" : " past") + '" style="font-size:15px">' + sea.name + ' Season' + (live ? " · Now" : "") + '</div><div class="row"><span class="small">' + sea.note + '</span>' + (w + l ? '<span class="small" style="font-weight:800">Tournament record ' + w + '–' + l + '</span>' : '') + '</div>';
+      var w = 0, l = 0, d = 0;
+      sea.periods.forEach(function (i) { var r = periodResult(ps[i], i); if (r.state !== "next") { w += r.wins.length; l += r.losses; d += r.ties; } });
+      h += '<div class="stack" style="gap:10px"><div class="wkline' + (live ? "" : " past") + '" style="font-size:15px">' + sea.name + ' Season' + (live ? " · Now" : "") + '</div><div class="row"><span class="small">' + sea.note + '</span>' + (w + l + d ? '<span class="small" style="font-weight:800">Tournament record ' + w + '–' + l + '–' + d + '</span>' : '') + '</div>';
       sea.periods.forEach(function (i) {
         if (sea.champ === 0 && i === 3) h += champPanel(0);
         h += tournamentPanel(ps[i], i);
