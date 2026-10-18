@@ -352,10 +352,11 @@ button.asg:first-child { border-top: 0; }
     var hs = '<button class="hstats" data-go="trophy" aria-label="Open standings">' + [[st.w + "\u2013" + st.l + "\u2013" + st.t, "W\u2013L\u2013T"], [st.goals, "GOALS"], [st.tourn, "TOURNEYS"], [st.champs, "TITLES"]].map(function (c) { return '<div><b>' + esc(String(c[0])) + '</b><span>' + c[1] + '</span></div>'; }).join("") + '</button>';
     h += header("Hey Ella!", sub, hs);
     if (next) {
-      var d = days(t, next.due), label = next.kind === "test" ? "You have a big game coming up!" : "Scrimmage coming up!";
+      var d = days(t, next.due), when = d === 0 ? "today" : d === 1 ? "tomorrow" : d <= 6 && toDate(next.due).getDay() > toDate(t).getDay() ? "this week" : "coming up";
+      var label = next.kind === "test" ? (d <= 1 ? "Big game " + when + "!" : "You have a big game " + when + "!") : (d <= 1 ? "Scrimmage " + when + "!" : "You have a scrimmage " + when + "!");
       var fullTitle = low(next.title).indexOf(low(next.className)) === 0 ? next.title : next.className + " " + next.title;
       var ps = practicesFor(next).filter(function (p) { return p.date === t; })[0];
-      h += '<div class="goal"><div class="card"><div class="bar"><span>' + label + '</span><span>' + esc(next.className) + '</span></div>' +
+      h += '<div class="goal"><div class="card"><div class="bar"><span>' + label + '</span><span>' + esc(next.className) + (next.kind === "test" ? " Test" : " Quiz") + '</span></div>' +
         '<div class="body"><div class="stack" style="gap:8px"><div class="title">' + esc(fullTitle) + '</div><div class="sub">' + (d === 0 ? "Kickoff today" : "Kickoff " + esc(longDay(next.due))) + '</div>' +
         '<div style="font-size:17px">' + (ps ? "Tonight's practice session is " + ps.mins + " minutes." : d === 0 ? "Game day. Quick warm-up, then go get it." : "Practice starts " + esc(wk(practicesFor(next)[0] ? practicesFor(next)[0].date : next.due)) + ".") + '</div></div>' +
         '<div class="score"><b>' + d + '</b><span>' + (d === 1 ? "DAY TO GO" : "DAYS TO GO") + '</span></div></div>' +
