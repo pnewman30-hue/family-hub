@@ -3,640 +3,617 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F3ECDD">
+  <meta name="theme-color" content="#0E1B3A">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ella School">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, nofollow">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="../icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
-  <title>Ella's School Dashboard</title>
+  <title>Ella's Coach</title>
 <style>
-/* Layout: one calm column — header and tally, the fall six-weeks strip, classes with grade weights,
-   what needs attention, what's coming up, then every assignment with working filters. */
 :root {
-  --bg: #F3ECDD;
-  --surface: #FFFCF6;
-  --ink: #15202B;
-  --muted: #6A6152;
-  --line: #E2D7C3;
-  --track: #ECE3D2;
-  --accent: #1D4F9C;
-  --accent-soft: #E5EDF8;
-  --pencil: #F4C430;
-  --on-pencil: #1B1B1B;
-  --good: #1B7A4A;
-  --good-soft: #E2F2E9;
-  --warn: #965900;
-  --warn-soft: #FAEFDC;
-  --bad: #B42318;
-  --bad-soft: #FBE6E4;
-  --font-ui: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --step--1: 0.8125rem;
-  --step-0: 0.9375rem;
-  --step-1: 1.125rem;
-  --step-2: 1.5rem;
-  --step-3: 2.25rem;
-  --radius: 10px;
+  --navy: #0E1B3A; --navy2: #122249; --panel: #070F24; --panel2: #101D3D; --line: #22335E;
+  --muted: #C3CCE0; --dim: #8E9BBB; --gold: #F4C430; --gold-ink: #070F24; --white: #FFFFFF;
+  --good: #7FE0A8; --mid: #FFB072; --bad: #FF8A80;
+  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: var(--step-0); line-height: 1.5; -webkit-font-smoothing: antialiased; }
-.wrap { max-width: 980px; margin: 0 auto; padding-inline: max(16px, 4vw); padding-block: 28px 56px; display: grid; gap: 36px; }
-h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
-h1 { font-size: var(--step-3); font-weight: 700; letter-spacing: -0.02em; }
-h2 { font-size: var(--step-1); font-weight: 700; }
-p { margin: 0; }
-.eyebrow { font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
-.updated { margin-top: 8px; color: var(--muted); font-size: var(--step--1); }
-.tally { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.tally span { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 11px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
-.tally b { font-variant-numeric: tabular-nums; font-size: var(--step-0); color: var(--ink); }
-.tally .bad b { color: var(--bad); }
-.tally .up b { color: var(--accent); }
-.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin-bottom: 12px; }
-.aside { color: var(--muted); font-size: var(--step--1); }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.note { color: var(--muted); font-size: var(--step--1); margin-top: 10px; max-width: 65ch; }
-.empty { padding: 18px 16px; color: var(--muted); }
-button { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+html, body { margin: 0; background: var(--navy); color: var(--white); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+body { background: repeating-linear-gradient(90deg, var(--navy) 0, var(--navy) 120px, var(--navy2) 120px, var(--navy2) 240px); min-height: 100vh; }
+button { font: inherit; color: inherit; cursor: pointer; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 860px; margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 18px 120px; display: flex; flex-direction: column; gap: 22px; }
+h1, h2, h3 { margin: 0; line-height: 1.12; }
+.eyebrow { font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.sub { color: var(--muted); font-size: 17px; }
+.small { color: var(--dim); font-size: 14px; }
+.panel { background: rgba(7, 15, 36, .82); border-radius: 18px; padding: 18px 20px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.pill { font-size: 12px; font-weight: 800; letter-spacing: .08em; padding: 5px 12px; border-radius: 999px; border: 2px solid var(--white); white-space: nowrap; }
+.pill.solid { background: var(--white); color: var(--panel); }
+.pill.gold { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
+.btn { border: 0; border-radius: 14px; padding: 15px 24px; font-size: 18px; font-weight: 800; min-height: 48px; }
+.btn.gold { background: var(--gold); color: var(--gold-ink); }
+.btn.ghost { background: transparent; border: 2px solid var(--white); color: var(--white); }
+.sec { font-size: 15px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
 
-/* six-weeks strip */
-.strip { position: relative; height: 86px; margin-top: 4px; }
-.seg { position: absolute; top: 24px; height: 26px; border-radius: 6px; background: var(--track); border: 1px solid var(--line); }
-.seg.now { background: var(--accent-soft); border-color: var(--accent); }
-.seg-label { position: absolute; top: 56px; font-size: 12px; line-height: 1.3; color: var(--muted); padding-left: 2px; white-space: nowrap; }
-.seg-label b { display: block; color: var(--ink); font-weight: 600; }
-.off { position: absolute; top: 31px; width: 2px; height: 12px; border-radius: 1px; background: var(--muted); opacity: 0.45; }
-.today { position: absolute; top: 16px; height: 42px; border-left: 2px solid var(--ink); }
-.today span { position: absolute; top: -18px; left: 0; transform: translateX(-50%); background: var(--pencil); color: var(--on-pencil); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 4px; white-space: nowrap; }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--muted); margin-top: 6px; }
-.legend i { display: inline-block; width: 2px; height: 10px; background: var(--muted); opacity: 0.6; margin-right: 6px; vertical-align: -1px; }
+/* header */
+.top { display: flex; align-items: center; gap: 16px; }
+.top h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
+.status { font-size: 13px; color: var(--dim); }
 
-/* classes */
-.classes { list-style: none; margin: 0; padding: 0; }
-.classes > li + li { border-top: 1px solid var(--line); }
-.crow, .classes summary { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; }
-.classes summary { cursor: pointer; list-style: none; }
-.classes summary::-webkit-details-marker { display: none; }
-.classes summary:hover { background: var(--accent-soft); }
-.per { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); font-size: var(--step--1); }
-.cname { min-width: 0; }
-.cname strong { display: block; font-weight: 600; }
-.cname small { display: block; color: var(--muted); font-size: var(--step--1); overflow-wrap: anywhere; }
-.plain .crow { color: var(--muted); }
-.plain .cname strong { font-weight: 500; }
-.gradebox { display: flex; align-items: center; gap: 12px; }
-.bar { position: relative; width: 96px; height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
-.bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: currentColor; }
-.bar u { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--surface); opacity: 0.9; }
-.grade { font-size: var(--step-2); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2.2ch; text-align: right; line-height: 1; }
-.grade.none { font-size: var(--step-0); font-weight: 500; color: var(--muted); }
-.g-a { color: var(--good); } .g-b { color: var(--accent); } .g-c { color: var(--warn); } .g-f { color: var(--bad); }
-.chev { width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translateY(-2px); transition: transform 0.15s; }
-details[open] .chev { transform: rotate(225deg) translateY(-2px); }
-.cbody { padding: 2px 16px 16px 62px; display: grid; gap: 14px; }
-.cbody h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
-.weights { display: grid; gap: 7px; }
-.w { display: grid; grid-template-columns: minmax(0, 1fr) 42px 110px; gap: 10px; align-items: center; font-size: var(--step--1); }
-.w .wt { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
-.w .mk { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; font-weight: 600; }
-.w .mk .bar { width: 64px; }
-.w .mk.none { color: var(--muted); font-weight: 400; }
-.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: var(--step--1); }
-.facts div span { display: block; color: var(--muted); font-size: 12px; }
-.facts b { font-variant-numeric: tabular-nums; }
-.contact { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: var(--step--1); }
-.email { user-select: all; overflow-wrap: anywhere; }
-.btn { font-size: var(--step--1); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
-.btn:hover { border-color: var(--accent); }
-.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+/* goal frame */
+.goal { position: relative; padding: 12px 12px 0; }
+.goal::before { content: ""; position: absolute; left: 0; top: 0; right: 0; bottom: 48px; border: 9px solid var(--white); border-bottom: 0; border-radius: 4px 4px 0 0;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.10) 0 1px, transparent 1px 20px), repeating-linear-gradient(-45deg, rgba(255,255,255,.10) 0 1px, transparent 1px 20px); }
+.goal > .card { position: relative; margin: 22px 12px 0; }
+.card { background: var(--panel); border-radius: 20px; overflow: hidden; }
+.card .bar { display: flex; justify-content: space-between; gap: 10px; padding: 13px 22px; background: var(--gold); color: var(--gold-ink); font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.card .body { padding: 22px; display: grid; grid-template-columns: minmax(0,1fr) 150px; gap: 18px; align-items: center; }
+.card .title { font-size: 32px; font-weight: 800; line-height: 1.1; }
+.card .foot { padding: 0 22px 22px; }
+.score { background: #000; border: 2px solid var(--line); border-radius: 14px; padding: 14px 0; text-align: center; }
+.score b { display: block; font-size: 64px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+.score span { font-size: 12px; font-weight: 800; letter-spacing: .14em; color: var(--muted); }
 
-/* attention + upcoming rows */
-.rows { list-style: none; margin: 0; padding: 0; }
-.rows li { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 11px 16px; }
-.rows li + li { border-top: 1px solid var(--line); }
-.rows .what { min-width: 0; }
-.rows .what strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
-.rows .what small { display: block; color: var(--muted); font-size: var(--step--1); }
-.rows .what small.src { font-size: 12px; margin-top: 2px; }
-.rows .when { font-size: var(--step--1); color: var(--muted); font-variant-numeric: tabular-nums; }
-.chip { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; line-height: 1.5; }
-.chip.zero { background: var(--bad-soft); color: var(--bad); }
-.chip.low { background: var(--warn-soft); color: var(--warn); }
-.chip.notgraded, .chip.nfg { background: var(--track); color: var(--muted); }
-.chip.upcoming { background: var(--pencil); color: var(--on-pencil); }
+/* bottom nav */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(7,15,36,.96); border-top: 1px solid var(--line); padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 4px; z-index: 5; }
+nav.tabs button { background: transparent; border: 0; border-radius: 12px; padding: 8px 4px; min-height: 52px; font-size: 13px; font-weight: 700; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+nav.tabs button[aria-current="page"] { background: var(--gold); color: var(--gold-ink); }
+nav.tabs svg { width: 22px; height: 22px; }
 
-/* all assignments */
-.filters { display: grid; gap: 10px; margin-bottom: 12px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chips button { font-size: var(--step--1); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
-.chips button:hover { border-color: var(--accent); }
-.chips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.chips .n { font-variant-numeric: tabular-nums; opacity: 0.7; margin-left: 5px; }
-.searchrow { display: flex; gap: 8px; flex-wrap: wrap; }
-.searchrow input { flex: 1 1 220px; min-width: 0; font: inherit; font-size: var(--step-0); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
-.count { color: var(--muted); font-size: var(--step--1); margin-bottom: 8px; }
-.ahead, .arow { display: grid; grid-template-columns: 64px 150px minmax(0, 1fr) 170px 110px; gap: 12px; align-items: center; padding: 10px 16px; }
-.ahead { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); }
-.ahead button { all: unset; cursor: pointer; }
-.ahead button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.arow + .arow { border-top: 1px solid var(--line); }
-.a-due { font-variant-numeric: tabular-nums; color: var(--muted); font-size: var(--step--1); }
-.a-cls { font-size: var(--step--1); min-width: 0; }
-.a-name { min-width: 0; }
-.a-name strong { font-weight: 600; overflow-wrap: anywhere; }
-.a-name small { display: block; color: var(--muted); font-size: 12px; }
-.a-type { color: var(--muted); font-size: var(--step--1); min-width: 0; overflow-wrap: anywhere; }
-.a-score { text-align: right; font-variant-numeric: tabular-nums; }
-.a-score b { display: block; font-weight: 700; }
-.a-score small { color: var(--muted); font-size: 12px; }
-.p-a { color: var(--good); } .p-b { color: var(--ink); } .p-c { color: var(--warn); } .p-f { color: var(--bad); }
-.foot { color: var(--muted); font-size: var(--step--1); display: grid; gap: 4px; }
-.status { padding: 22px 16px; color: var(--muted); }
-.status strong { display: block; color: var(--ink); font-size: var(--step-1); margin-bottom: 4px; }
+/* game plan */
+.buckets { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.bucket { text-align: left; border-radius: 16px; padding: 14px 16px; min-height: 92px; border: 2px solid var(--line); background: var(--panel2); }
+.bucket[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+.bucket .k { display: block; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+.bucket .n { display: block; font-size: 23px; font-weight: 800; margin-top: 4px; }
+.bucket .x { display: block; font-size: 13px; font-weight: 600; margin-top: 3px; opacity: .85; }
+.picker { display: flex; gap: 8px; flex-wrap: wrap; }
+.picker button { border: 2px solid var(--line); background: transparent; border-radius: 999px; padding: 9px 14px; font-size: 15px; font-weight: 700; min-height: 44px; }
+.picker button[aria-pressed="true"] { border-color: var(--white); background: var(--white); color: var(--panel); }
+.ptabs { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 6px; background: var(--panel2); padding: 5px; border-radius: 16px; }
+.ptabs button { border: 0; background: transparent; border-radius: 12px; padding: 10px 4px; min-height: 58px; color: #E3E8F2; }
+.ptabs button b { display: block; font-size: 18px; }
+.ptabs button span { display: block; font-size: 12px; font-weight: 600; opacity: .8; margin-top: 2px; }
+.ptabs button[aria-pressed="true"] { background: var(--gold); color: var(--gold-ink); }
+.prac { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-radius: 18px; padding: 18px 20px; background: var(--panel2); border: 2px solid transparent; width: 100%; text-align: left; color: var(--white); }
+.prac.next { background: #1A2F63; }
+.prac.done { border-color: var(--good); }
+.prac .d { font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.prac.next .d { color: var(--gold); }
+.prac .w { font-size: 20px; font-weight: 800; margin-top: 3px; }
+.prac .s { font-size: 15px; font-weight: 800; white-space: nowrap; }
+.topic { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.topic .nm { font-size: 18px; font-weight: 700; flex: 1 1 220px; }
+.conf { display: flex; gap: 6px; }
+.conf button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 9px 13px; font-size: 14px; font-weight: 700; min-height: 44px; color: #E3E8F2; }
+.conf button.on-yes { background: var(--good); border-color: var(--good); color: var(--panel); }
+.conf button.on-kinda { background: var(--mid); border-color: var(--mid); color: var(--panel); }
+.conf button.on-no { background: var(--white); border-color: var(--white); color: var(--panel); }
+.drill { display: grid; grid-template-columns: 48px minmax(0,1fr) auto; gap: 14px; align-items: center; }
+.drill .num { width: 44px; height: 44px; border-radius: 50%; background: var(--gold); color: var(--gold-ink); display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 800; }
+.big { font-size: 42px; font-weight: 800; }
 
-@media (max-width: 760px) {
-  .ahead { display: none; }
-  .arow { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "meta score" "name score" "type type"; gap: 2px 12px; }
-  .a-due, .a-cls { grid-area: meta; }
-  .a-due { display: none; }
-  .a-cls::before { content: attr(data-due) " · "; color: var(--muted); }
-  .a-cls { color: var(--muted); }
-  .a-name { grid-area: name; }
-  .a-type { grid-area: type; font-size: 12px; }
-  .a-score { grid-area: score; align-self: center; }
-  .cbody { padding-left: 16px; }
-  .rows li { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "when chip" "what chip"; gap: 2px 12px; }
-  .rows .when { grid-area: when; }
-  .rows .what { grid-area: what; }
-  .rows .chip { grid-area: chip; }
+/* trophy case */
+.board { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); background: #000; border: 2px solid var(--line); border-radius: 18px; padding: 16px 6px; text-align: center; }
+.board div + div { border-left: 1px solid var(--line); }
+.board b { display: block; font-size: 46px; line-height: 1; color: var(--gold); }
+.board span { font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--muted); }
+.shelf { position: relative; border: 10px solid var(--white); border-bottom: 0; border-radius: 6px 6px 0 0; background-color: #0A1530;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.09) 0 1px, transparent 1px 22px), repeating-linear-gradient(-45deg, rgba(255,255,255,.09) 0 1px, transparent 1px 22px); padding: 20px 10px 0; }
+.shelf-grass { height: 10px; background: #1E5A39; border-radius: 0 0 6px 6px; }
+.awards { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; align-items: end; }
+.award { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-bottom: 12px; text-align: center; }
+.award b { font-size: 20px; }
+.award small { font-size: 12px; color: var(--muted); line-height: 1.25; }
+.medals { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 6px; }
+.balls { display: flex; flex-wrap: wrap; gap: 8px; }
+.empty { border: 2px dashed var(--line); border-radius: 16px; padding: 16px 18px; color: #E3E8F2; }
+
+/* grades + schedule */
+.cls { width: 100%; text-align: left; background: var(--panel); border: 0; border-radius: 16px; padding: 16px 18px; color: var(--white); display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 12px; align-items: center; }
+.cls .g { font-size: 30px; font-weight: 800; }
+.g-a { color: var(--good); } .g-b { color: var(--white); } .g-c { color: var(--mid); } .g-f { color: var(--bad); }
+.cats { padding: 4px 18px 16px 64px; display: grid; gap: 8px; font-size: 15px; }
+.cats .c { display: grid; grid-template-columns: minmax(0,1fr) 46px 52px; gap: 10px; }
+.asg { display: grid; grid-template-columns: 70px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.asg:first-child { border-top: 0; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filters button { border: 2px solid var(--line); background: transparent; border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 700; min-height: 42px; }
+.filters button[aria-pressed="true"] { background: var(--white); color: var(--panel); border-color: var(--white); }
+.msg { padding: 40px 10px; text-align: center; color: var(--muted); font-size: 18px; }
+
+@media (max-width: 560px) {
+  .top h1 { font-size: 30px; }
+  .card .body { grid-template-columns: minmax(0,1fr) 104px; }
+  .card .title { font-size: 26px; }
+  .score b { font-size: 46px; }
+  .buckets { grid-template-columns: 1fr; }
+  .bucket { min-height: 0; }
+  .cats { padding-left: 18px; }
 }
-@media (max-width: 460px) {
-  .bar.big { display: none; }
-  h1 { font-size: 1.85rem; }
-  .w { grid-template-columns: minmax(0, 1fr) 38px 92px; }
-  .w .mk .bar { width: 44px; }
-}
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <p class="eyebrow" id="eyebrow">Lassiter High School · Fall Semester</p>
-    <h1>Ella's School Dashboard</h1>
-    <p class="updated" id="updated">Loading Ella's classes…</p>
-    <div class="tally" id="tally" aria-live="polite"></div>
-  </header>
-
-  <section aria-labelledby="h-term">
-    <div class="sec-head"><h2 id="h-term">Grading Periods</h2><span class="aside" id="term-aside"></span></div>
-    <div class="strip" id="strip" role="img" aria-label="Fall semester grading periods"></div>
-    <div class="legend" id="legend" hidden><span><i></i>No-school day</span></div>
-  </section>
-
-  <section aria-labelledby="h-classes">
-    <div class="sec-head"><h2 id="h-classes">Classes</h2><span class="aside">Semester-to-date grades. Tap a class for its grade weights and teacher.</span></div>
-    <div class="panel">
-      <ol class="classes" id="classes">
-        <li class="status"><strong>Loading classes</strong>Ella's schedule, teachers and grades appear here once the data loads.</li>
-      </ol>
-    </div>
-  </section>
-
-  <section aria-labelledby="h-att">
-    <div class="sec-head"><h2 id="h-att">Needs Attention</h2><span class="aside">Zeros, ungraded past work and grade categories under 70</span></div>
-    <div class="panel"><ul class="rows" id="attention"><li class="status">Nothing to show yet.</li></ul></div>
-  </section>
-
-  <section aria-labelledby="h-up">
-    <div class="sec-head"><h2 id="h-up">Coming Up</h2><span class="aside">Tests, quizzes and work due from today on</span></div>
-    <div class="panel"><ul class="rows" id="upcoming"><li class="status">Nothing to show yet.</li></ul></div>
-    <p class="note" id="up-note">Dates come from the ParentVUE gradebook, the CTLS class calendars and teachers' CTLS class posts. Teachers can move dates, so CTLS has the final word.</p>
-  </section>
-
-  <section aria-labelledby="h-all" id="all">
-    <div class="sec-head"><h2 id="h-all">All Assignments</h2><span class="aside" id="all-aside"></span></div>
-    <div class="filters">
-      <div class="chips" id="f-class" role="group" aria-label="Filter by class"></div>
-      <div class="chips" id="f-status" role="group" aria-label="Filter by status"></div>
-      <div class="searchrow">
-        <input type="search" id="f-q" placeholder="Search assignments, types or notes" aria-label="Search assignments">
-        <button class="btn" id="f-sort" type="button">Newest First</button>
-        <button class="btn" id="f-clear" type="button">Clear Filters</button>
-      </div>
-    </div>
-    <p class="count" id="count"></p>
-    <div class="panel" id="list-panel">
-      <div class="ahead" aria-hidden="true"><span>Due</span><span>Class</span><span>Assignment</span><span>Category</span><span style="text-align:right">Score</span></div>
-      <div id="list"><div class="status">Assignments appear here once the data loads.</div></div>
-    </div>
-  </section>
-
-  <footer class="foot">
-    <p id="foot-source">Source: ParentVUE gradebook for Lassiter High School.</p>
-    <p>Grades are semester-to-date averages, the same figures ParentVUE shows. Scores show points earned out of points possible.</p>
-  </footer>
-</div>
+<main class="wrap" id="app"><div class="msg">Coach is getting your plan ready…</div></main>
+<nav class="tabs" id="tabs" aria-label="Sections"></nav>
 
 <script>
 (function () {
   "use strict";
-  var $ = function (s) { return document.querySelector(s); };
-  var STORE_KEY = "ella-tracker-filters-v1";
-  var STATUS = [
-    { key: "all", label: "All" },
-    { key: "zero", label: "Zeros" },
-    { key: "notgraded", label: "Not Graded" },
-    { key: "upcoming", label: "Coming Up" },
-    { key: "graded", label: "Graded" }
-  ];
-  var state = { meta: null, classes: null, ctls: null, cls: "all", status: "all", q: "", sort: "desc" };
-  try {
-    var saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
-    ["cls", "status", "sort"].forEach(function (k) { if (typeof saved[k] === "string") state[k] = saved[k]; });
-  } catch (e) { /* storage unavailable: defaults are fine */ }
-  function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify({ cls: state.cls, status: state.status, sort: state.sort })); } catch (e) {}
-  }
+  var API_KEY_URL = "newman_school_script_url", API_KEY_PASS = "newman_school_script_key", CACHE = "ella-dashboard-cache-v1", LOCAL = "ella-soccer-v1";
+  var DEFAULT_API = "https://script.google.com/macros/s/AKfycbxNkbjYQDpXh_BDXwxtEEnqX5JtMm3BAOi9RBpiIptpsfgy3VoU-FP3L4xf0Qo_ng81pQ/exec";
+  var D = null;
+  var ui = { view: "home", bucket: "game", ev: null, tab: "when", open: {}, filter: "all" };
+  var mine = { done: {}, conf: {} };
 
-  function h(tag, attrs) {
-    var el = document.createElement(tag);
-    if (attrs) Object.keys(attrs).forEach(function (k) {
-      var v = attrs[k];
-      if (v == null || v === false) return;
-      if (k === "text") el.textContent = v;
-      else if (k === "on") Object.keys(v).forEach(function (ev) { el.addEventListener(ev, v[ev]); });
-      else el.setAttribute(k, v === true ? "" : String(v));
-    });
-    for (var i = 2; i < arguments.length; i++) {
-      var c = arguments[i];
-      if (c == null || c === false) continue;
-      if (Array.isArray(c)) c.forEach(function (x) { if (x != null && x !== false) el.append(x); });
-      else el.append(c);
-    }
-    return el;
-  }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  try { var m = JSON.parse(store(LOCAL) || "null"); if (m) { mine.done = m.done || {}; mine.conf = m.conf || {}; } } catch (e) {}
+  function saveMine() { store(LOCAL, JSON.stringify(mine)); }
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function pad(n) { return String(n).padStart(2, "0"); }
-  function todayISO() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
-  function toDate(iso) { var p = String(iso).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
-  function fmt(iso, opts) {
-    if (!iso) return "No date";
-    return toDate(iso).toLocaleDateString("en-US", opts || { month: "short", day: "numeric" });
-  }
+  function iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function today() { return iso(new Date()); }
+  function toDate(s) { var p = String(s).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function addDays(s, n) { var d = toDate(s); d.setDate(d.getDate() + n); return iso(d); }
   function days(a, b) { return Math.round((toDate(b) - toDate(a)) / 86400000); }
-  function band(n) { n = Number(n); if (!isFinite(n)) return "none"; if (n >= 90) return "a"; if (n >= 80) return "b"; if (n >= 70) return "c"; return "f"; }
-  function clamp(n) { n = Number(n); return isFinite(n) ? Math.max(0, Math.min(100, n)) : 0; }
-  function statusOf(a, today) {
-    if (a.status === "nfg") return "nfg";
-    if (a.pct == null) return (a.due && a.due >= today) ? "upcoming" : "notgraded";
-    if (Number(a.pct) === 0) return "zero";
-    return "graded";
-  }
-  function pctText(p) { p = Number(p); return (Math.round(p * 10) / 10).toString().replace(/\.0$/, "") + "%"; }
-  function bar(pct, cls) {
-    var b = h("span", { class: "bar" + (cls ? " " + cls : ""), "aria-hidden": "true" }, h("i", { style: "width:" + clamp(pct) + "%" }));
-    [70, 80, 90].forEach(function (t) { b.append(h("u", { style: "left:" + t + "%" })); });
-    return b;
-  }
+  function fmt(s, o) { return s ? toDate(s).toLocaleDateString("en-US", o || { month: "short", day: "numeric" }) : "No date"; }
+  function wk(s) { return fmt(s, { weekday: "short" }); }
+  function longDay(s) { return fmt(s, { weekday: "long", month: "short", day: "numeric" }); }
+  function band(n) { n = Number(n); return n >= 90 ? "a" : n >= 80 ? "b" : n >= 70 ? "c" : "f"; }
+  function low(s) { return String(s || "").toLowerCase(); }
 
-  function items() {
-    var today = todayISO(), out = [];
-    (state.classes || []).forEach(function (c) {
-      (c.assignments || []).forEach(function (a) {
-        out.push(Object.assign({}, a, { cls: "p" + c.period, className: c.name, st: statusOf(a, today) }));
-      });
+  /* ---------- icons ---------- */
+  var clipN = 0;
+  function ball(size) {
+    var id = "bc" + (clipN++);
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="' + id + '"><circle cx="50" cy="50" r="46"/></clipPath></defs>' +
+      '<circle cx="50" cy="50" r="46" fill="#fff"/><g clip-path="url(#' + id + ')" fill="#15202B">' +
+      '<polygon points="50,37 62.4,46 57.6,60.5 42.4,60.5 37.6,46"/><polygon points="50,23 37.6,14 42.4,-.5 57.6,-.5 62.4,14"/>' +
+      '<polygon points="75.7,41.7 80.4,27.1 95.7,27.1 100.4,41.7 88,50.6"/><polygon points="65.9,71.8 81.2,71.8 85.9,86.4 73.5,95.4 61.1,86.4"/>' +
+      '<polygon points="34.1,71.8 38.9,86.4 26.5,95.4 14.1,86.4 18.8,71.8"/><polygon points="24.3,41.7 12,50.6 -.4,41.7 4.3,27.1 19.6,27.1"/></g>' +
+      '<g stroke="#15202B" stroke-width="2.5" stroke-linecap="round"><line x1="50" y1="37" x2="50" y2="23"/><line x1="62.4" y1="46" x2="75.7" y2="41.7"/><line x1="57.6" y1="60.5" x2="65.9" y2="71.8"/><line x1="42.4" y1="60.5" x2="34.1" y2="71.8"/><line x1="37.6" y1="46" x2="24.3" y2="41.7"/>' +
+      '<line x1="62.4" y1="14" x2="80.4" y2="27.1"/><line x1="88" y1="50.6" x2="81.2" y2="71.8"/><line x1="61.1" y1="86.4" x2="38.9" y2="86.4"/><line x1="18.8" y1="71.8" x2="12" y2="50.6"/><line x1="19.6" y1="27.1" x2="37.6" y2="14"/></g>' +
+      '<circle cx="50" cy="50" r="46" fill="none" stroke="#15202B" stroke-width="3"/></svg>';
+  }
+  function trophy(w, empty) {
+    var h = Math.round(w * 1.2);
+    if (empty) return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 100 120" aria-hidden="true"><path d="M25 10H75V40C75 62 63 74 50 74C37 74 25 62 25 40ZM27 20H14C9 20 7 24 7 29C7 41 17 49 28 51M73 20H86C91 20 93 24 93 29C93 41 83 49 72 51M45 74V88M55 74V88M32 88H68V97H32ZM24 97H76V115H24Z" fill="none" stroke="#8E9BBB" stroke-width="4" stroke-linejoin="round"/></svg>';
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 100 120" aria-hidden="true"><path d="M27 20H14C9 20 7 24 7 29C7 41 17 49 28 51" fill="none" stroke="#D9A515" stroke-width="6" stroke-linecap="round"/><path d="M73 20H86C91 20 93 24 93 29C93 41 83 49 72 51" fill="none" stroke="#D9A515" stroke-width="6" stroke-linecap="round"/>' +
+      '<path d="M25 10H75V40C75 62 63 74 50 74C37 74 25 62 25 40Z" fill="#F4C430" stroke="#B8860B" stroke-width="2"/><path d="M34 16V42" stroke="#FFE58A" stroke-width="4" stroke-linecap="round"/><rect x="45" y="74" width="10" height="14" fill="#D9A515"/>' +
+      '<rect x="32" y="88" width="36" height="9" rx="2" fill="#F4C430" stroke="#B8860B" stroke-width="1.5"/><rect x="24" y="97" width="52" height="18" rx="3" fill="#4A3418"/><rect x="34" y="102" width="32" height="8" rx="1" fill="#C9A24A"/></svg>';
+  }
+  function cup(w, star) {
+    var h = Math.round(w * 1.2);
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 100 120" aria-hidden="true"><path d="M27 20H14C9 20 7 24 7 29C7 41 17 49 28 51" fill="none" stroke="#D9A515" stroke-width="6" stroke-linecap="round"/><path d="M73 20H86C91 20 93 24 93 29C93 41 83 49 72 51" fill="none" stroke="#D9A515" stroke-width="6" stroke-linecap="round"/>' +
+      '<path d="M25 10H75V40C75 62 63 74 50 74C37 74 25 62 25 40Z" fill="#F4C430" stroke="#B8860B" stroke-width="2"/>' +
+      (star ? '<path d="M50 22l4.7 9.6 10.6 1.5-7.7 7.5 1.8 10.5L50 46.2l-9.4 4.9 1.8-10.5-7.7-7.5 10.6-1.5z" fill="#FFFFFF"/>' : '<circle cx="50" cy="36" r="11" fill="#0E1B3A"/><text x="50" y="41" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="800" fill="#F4C430">90</text>') +
+      '<rect x="45" y="74" width="10" height="14" fill="#D9A515"/><rect x="32" y="88" width="36" height="9" rx="2" fill="#F4C430" stroke="#B8860B" stroke-width="1.5"/><rect x="20" y="97" width="60" height="20" rx="3" fill="' + (star ? "#FFFFFF" : "#0E1B3A") + '"/></svg>';
+  }
+  function medal(w, empty) {
+    var h = Math.round(w * 1.375);
+    if (empty) return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 80 110" aria-hidden="true"><path d="M16 2H36L48 44H28ZM64 2H44L32 44H52Z" fill="none" stroke="#8E9BBB" stroke-width="4" stroke-linejoin="round"/><circle cx="40" cy="72" r="28" fill="none" stroke="#8E9BBB" stroke-width="4"/></svg>';
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 80 110" aria-hidden="true"><polygon points="16,0 36,0 48,44 28,44" fill="#FFFFFF"/><polygon points="64,0 44,0 32,44 52,44" fill="#C3CCE0"/>' +
+      '<circle cx="40" cy="72" r="30" fill="#F4C430" stroke="#B8860B" stroke-width="3"/><circle cx="40" cy="72" r="21" fill="none" stroke="#FFE58A" stroke-width="2"/>' +
+      '<path d="M40 58l4.1 8.4 9.2 1.3-6.7 6.5 1.6 9.2-8.2-4.3-8.2 4.3 1.6-9.2-6.7-6.5 9.2-1.3z" fill="#B8860B"/></svg>';
+  }
+  var crest = '<svg width="64" height="72" viewBox="0 0 100 112" role="img" aria-label="Ella\'s crest"><path d="M50 4L94 16V52C94 80 74 98 50 108C26 98 6 80 6 52V16Z" fill="#0E1B3A" stroke="#F4C430" stroke-width="6"/><path d="M14 22H86V34H14Z" fill="#F4C430"/><text x="50" y="82" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="44" font-weight="800" fill="#fff">E</text></svg>';
+  var navIcons = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+    plan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M3 12h18"/><circle cx="12" cy="12" r="3"/></svg>',
+    trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 20h8"/></svg>',
+    grades: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20V12M12 20V6M19 20v-9"/></svg>',
+    schedule: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
+  };
+
+  /* ---------- data model ---------- */
+  function kindOf(a) {
+    var n = low(a.name || a.title), t = low(a.type || a.kind);
+    if (/review|practice|corrections?|check\b/.test(n) && !/\b(test|quiz)\b$/.test(n)) {
+      if (/\btest\b/.test(n) && !/review/.test(n)) return "test";
+      return "work";
+    }
+    if (/\b(test|exam)\b/.test(n)) return "test";
+    if (/\bquiz/.test(n)) return "quiz";
+    if (/^tests?$|^test$|unit tests?/.test(t) && !/project/.test(n)) return /project/.test(t) && !/test/.test(n) ? "work" : "test";
+    if (/^quiz(zes)?$/.test(t)) return "quiz";
+    return "work";
+  }
+  function allAssignments() {
+    var out = [];
+    (D.classes || []).forEach(function (c) {
+      (c.assignments || []).forEach(function (a) { out.push(Object.assign({}, a, { cls: c })); });
     });
     return out;
   }
-
-  function renderHeader(all) {
-    var m = state.meta || {};
-    var bits = [m.school || "Lassiter High School", m.gradeLevel, m.term].filter(Boolean);
-    $("#eyebrow").textContent = bits.join(" · ");
-    var src = (m.sources || ["ParentVUE"]).join(" and ");
-    var up = m.updated ? "Updated " + fmt(m.updated, { month: "short", day: "numeric", year: "numeric" }) + " from " + src : "From " + src;
-    if ((m.pending || []).indexOf("CTLS") !== -1) up += " · CTLS assignments not included yet";
-    $("#updated").textContent = up;
-    $("#foot-source").textContent = "Source: " + src + (m.updated ? ", pulled " + fmt(m.updated, { month: "long", day: "numeric", year: "numeric" }) : "") + ".";
-    var n = { zero: 0, notgraded: 0, upcoming: 0 };
-    all.forEach(function (a) { if (n[a.st] != null) n[a.st]++; });
-    n.upcoming = upcomingItems(all).length;
-    var graded = (state.classes || []).filter(function (c) { return c.graded; }).length;
-    var t = $("#tally"); t.replaceChildren();
-    t.append(
-      h("span", null, h("b", { text: graded }), "graded classes"),
-      h("span", null, h("b", { text: all.length }), "assignments"),
-      h("span", { class: n.zero ? "bad" : "" }, h("b", { text: n.zero }), n.zero === 1 ? "zero" : "zeros"),
-      h("span", null, h("b", { text: n.notgraded }), "not graded yet"),
-      h("span", { class: "up" }, h("b", { text: n.upcoming }), "coming up")
-    );
+  function shortName(c) { return c ? String(c.name || "").replace(/^The\s+/i, "") : ""; }
+  function classByPeriod(p) { return (D.classes || []).filter(function (c) { return c.period === p; })[0]; }
+  function classByName(name) {
+    var n = low(name);
+    return (D.classes || []).filter(function (c) { return low(c.name) === n || low(c.official).indexOf(n) === 0 || n.indexOf(low(c.name)) === 0; })[0];
   }
 
-  function renderStrip() {
-    var m = state.meta, el = $("#strip");
-    el.replaceChildren();
-    if (!m || !m.periods || !m.periods.length) return;
-    var start = m.periods[0].start, end = m.periods[m.periods.length - 1].end, span = days(start, end) || 1;
-    var pos = function (iso) { return (days(start, iso) / span) * 100; };
-    var today = todayISO(), cur = null;
-    m.periods.forEach(function (p) {
-      var l = pos(p.start), w = Math.max(pos(p.end) - l, 1);
-      var now = today >= p.start && today <= p.end;
-      if (now) cur = p;
-      el.append(h("div", { class: "seg" + (now ? " now" : ""), style: "left:" + l + "%;width:calc(" + w + "% - 3px)" }));
-      el.append(h("div", { class: "seg-label", style: "left:" + l + "%" },
-        h("b", { text: p.name }), fmt(p.start) + " – " + fmt(p.end)));
+  function events() {
+    var t = today(), list = [], seen = {};
+    var ctls = D.ctls && Array.isArray(D.ctls.items) ? D.ctls.items : [];
+    ctls.forEach(function (x) {
+      var k = /test/i.test(x.kind) ? "test" : /quiz/i.test(x.kind) ? "quiz" : null;
+      if (!k || !x.due || x.due < t) return;
+      var c = (x.period && classByPeriod(x.period)) || classByName(x.className);
+      var id = x.id || (k + "-" + x.due + "-" + low(x.title).replace(/\W+/g, ""));
+      seen[(c ? c.period : x.className) + "|" + x.due] = true;
+      list.push({ id: id, kind: k, title: x.title, due: x.due, cls: c, className: c ? shortName(c) : x.className, note: x.note || "" });
     });
-    var offs = (m.noSchool || []).filter(function (d) { return d.date >= start && d.date <= end; });
-    offs.forEach(function (d) { el.append(h("div", { class: "off", style: "left:" + pos(d.date) + "%", title: fmt(d.date) + ": " + (d.title || "No school") })); });
-    $("#legend").hidden = !offs.length;
-    if (today >= start && today <= end) {
-      el.append(h("div", { class: "today", style: "left:" + pos(today) + "%" }, h("span", { text: "Today · " + fmt(today) })));
-    }
-    var aside = $("#term-aside");
-    if (cur) {
-      var left = days(today, cur.end);
-      aside.textContent = cur.name + " ends " + fmt(cur.end, { month: "long", day: "numeric" }) + (left > 0 ? " (" + left + " days)" : "");
-    } else aside.textContent = "";
-    el.setAttribute("aria-label", "Fall semester grading periods: " + m.periods.map(function (p) { return p.name + " " + fmt(p.start) + " to " + fmt(p.end); }).join("; "));
-  }
-
-  function copyBtn(text) {
-    var b = h("button", { class: "btn", type: "button", text: "Copy Email" });
-    b.addEventListener("click", function (ev) {
-      ev.preventDefault();
-      var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy Email"; }, 1600); };
-      var fallback = function () {
-        var span = b.parentNode.querySelector(".email");
-        var r = document.createRange(); r.selectNodeContents(span);
-        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-        b.textContent = "Selected";
-        setTimeout(function () { b.textContent = "Copy Email"; }, 1600);
-      };
-      try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+    allAssignments().forEach(function (a) {
+      if (!a.due || a.due < t || a.pct != null) return;
+      var k = kindOf(a);
+      if (k === "work") return;
+      if (seen[a.cls.period + "|" + a.due]) return;
+      list.push({ id: "pv-" + a.id, kind: k, title: a.name, due: a.due, cls: a.cls, className: shortName(a.cls), note: "" });
     });
-    return b;
+    list.sort(function (a, b) { return a.due.localeCompare(b.due) || (a.kind === "test" ? -1 : 1); });
+    return list;
   }
 
-  function renderClasses(all) {
-    var ol = $("#classes"); ol.replaceChildren();
-    var list = state.classes || [];
-    if (!list.length) {
-      ol.append(h("li", { class: "status" }, h("strong", { text: "No classes yet" }), "Claude adds Ella's schedule here from ParentVUE."));
-      return;
+  function practicesFor(ev) {
+    var t = today(), n = ev.kind === "test" ? 3 : 2, mins = ev.kind === "test" ? 25 : 20, out = [];
+    var labels = ev.kind === "test" ? ["Catch up your notes", "Key ideas and vocab", "Quiz yourself"] : ["Flashcards", "Say it, then write it"];
+    for (var i = n; i >= 1; i--) {
+      var d = addDays(ev.due, -i);
+      if (d < t) continue;
+      out.push({ id: ev.id + "@" + d, date: d, mins: mins, what: labels[n - i], ev: ev });
     }
-    list.forEach(function (c) {
-      var sub = [c.teacher, c.room ? "Rm " + c.room : ""].filter(Boolean).join(" · ");
-      if (!c.graded) {
-        ol.append(h("li", { class: "plain" }, h("div", { class: "crow" },
-          h("span", { class: "per", text: "P" + c.period }),
-          h("span", { class: "cname" }, h("strong", { text: c.name }), h("small", { text: sub })),
-          h("span", { class: "grade none", text: "No grade" }))));
-        return;
+    if (!out.length && ev.due >= t) out.push({ id: ev.id + "@" + ev.due, date: ev.due, mins: 10, what: "Game-day warm-up", ev: ev });
+    return out;
+  }
+
+  function topicsFor(ev) {
+    var t = today(), c = ev.cls, picks = [];
+    if (c) {
+      (c.assignments || []).filter(function (a) { return a.due && a.due <= t && days(a.due, t) <= 28; })
+        .sort(function (a, b) { return b.due.localeCompare(a.due); })
+        .forEach(function (a) { var nm = String(a.name || "").trim(); if (nm && picks.indexOf(nm) < 0 && picks.length < 5) picks.push(nm); });
+    }
+    if (!picks.length) picks.push("Class notes since the last " + (ev.kind === "test" ? "test" : "quiz"));
+    return picks;
+  }
+  function confKey(ev, i) { return ev.id + "#" + i; }
+
+  function catFor(c, kind) {
+    if (!c) return null;
+    var re = kind === "test" ? /test|exam/i : /quiz/i;
+    return (c.categories || []).filter(function (w) { return re.test(w.type); })[0] || null;
+  }
+  function lastOf(c, kind) {
+    if (!c) return null;
+    return (c.assignments || []).filter(function (a) { return a.pct != null && kindOf(a) === kind; })
+      .sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); })[0] || null;
+  }
+  function weakSpot(c) {
+    if (!c) return null;
+    return (c.assignments || []).filter(function (a) { return a.pct != null && a.pct < 70 && days(a.due || today(), today()) <= 21; })
+      .sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); })[0] || null;
+  }
+
+  function awards() {
+    var tro = [], med = [], perfect = 0;
+    allAssignments().forEach(function (a) {
+      if (a.pct == null) return;
+      var k = kindOf(a);
+      if (k === "test" && a.pct >= 80) tro.push(a);
+      else if (k === "quiz" && a.pct >= 80) med.push(a);
+      else if (k === "work" && a.pct >= 100) perfect++;
+    });
+    var byScore = function (a, b) { return b.pct - a.pct || (b.due || "").localeCompare(a.due || ""); };
+    tro.sort(byScore); med.sort(byScore);
+    var practices = Object.keys(mine.done).filter(function (k) { return mine.done[k]; }).length;
+    return { trophies: tro, medals: med, perfect: perfect, practices: practices, balls: perfect + practices };
+  }
+
+  /* ---------- views ---------- */
+  function header(title, sub) {
+    return '<div class="top">' + crest + '<div class="stack" style="gap:4px"><div class="eyebrow">' + esc(fmt(today(), { weekday: "long", month: "short", day: "numeric" })) + '</div><h1>' + esc(title) + '</h1>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : '') + '</div></div>';
+  }
+
+  function viewHome() {
+    var evs = events(), next = evs[0], t = today(), h = "";
+    var tonight = [];
+    evs.forEach(function (e) { practicesFor(e).forEach(function (p) { if (p.date === t) tonight.push(p); }); });
+    var sub = tonight.length ? (tonight.length === 1 ? "One practice tonight." : tonight.length + " practices tonight.") : "No practice tonight. Enjoy it.";
+    h += header("Hey Ella.", sub);
+    if (next) {
+      var d = days(t, next.due), label = next.kind === "test" ? "Next Game" : "Next Scrimmage";
+      var ps = practicesFor(next).filter(function (p) { return p.date === t; })[0];
+      h += '<div class="goal"><div class="card"><div class="bar"><span>' + label + '</span><span>' + esc(next.className) + (next.kind === "test" ? " Test" : " Quiz") + '</span></div>' +
+        '<div class="body"><div class="stack" style="gap:8px"><div class="title">' + esc(next.title) + '</div><div class="sub">' + (d === 0 ? "Kickoff today" : "Kickoff " + esc(longDay(next.due))) + '</div>' +
+        '<div style="font-size:17px">' + (ps ? "Tonight's practice is " + ps.mins + " minutes." : d === 0 ? "Game day. Quick warm-up, then go get it." : "Practice starts " + esc(wk(practicesFor(next)[0] ? practicesFor(next)[0].date : next.due)) + ".") + '</div></div>' +
+        '<div class="score"><b>' + d + '</b><span>' + (d === 1 ? "DAY TO GO" : "DAYS TO GO") + '</span></div></div>' +
+        '<div class="foot"><button class="btn gold" data-go="plan" data-ev="' + esc(next.id) + '">Ask Coach</button></div></div></div>';
+    } else {
+      h += '<div class="goal"><div class="card"><div class="bar"><span>Next Game</span><span>Open week</span></div><div class="body"><div class="stack" style="gap:8px"><div class="title">No tests or quizzes posted</div><div class="sub">Nothing on the schedule yet. Keep up with homework and you\'re ahead.</div></div><div class="score"><b>0</b><span>GAMES</span></div></div></div></div>';
+    }
+    var TIPS = [
+      ["First Touch", "Start practice with the easiest topic. A good first touch gets you moving."],
+      ["Short Sessions", "Pros train in focused blocks. 25 minutes on, then a real break."],
+      ["Game Speed", "Test yourself like it's game day. No notes, then check."],
+      ["Phone On The Bench", "Put your phone in another room for one practice. Watch what happens."],
+      ["Know The Field", "Look at Coach's schedule on Sunday so nothing surprises you."],
+      ["Recovery Counts", "Sleep is part of training. A rested brain remembers more."],
+      ["Ask The Ref", "Stuck on something? Ask the teacher before the game, not after."]
+    ];
+    var tp = TIPS[Math.floor(toDate(t) / 86400000) % TIPS.length];
+    h += '<div class="panel" style="background:#1E5A39"><div class="eyebrow" style="color:#FFE58A">Coach\'s Training Tip · ' + esc(tp[0]) + '</div><div style="font-size:18px;line-height:1.45;margin-top:6px">' + esc(tp[1]) + '</div></div>';
+    var also = [];
+    evs.slice(1).filter(function (e) { return days(t, e.due) <= 7; }).forEach(function (e) {
+      also.push({ title: e.className + " " + (e.kind === "test" ? "Test" : "Quiz"), sub: (e.kind === "test" ? "Game" : "Scrimmage") + " · " + longDay(e.due), pill: e.kind === "test" ? "GAME" : "SCRIMMAGE", ev: e.id });
+    });
+    var ctls = D.ctls && Array.isArray(D.ctls.items) ? D.ctls.items : [];
+    ctls.filter(function (x) { return !/test|quiz/i.test(x.kind || "") && x.due && x.due >= t && days(t, x.due) <= 7; }).forEach(function (x) {
+      also.push({ title: x.title, sub: (x.className || "") + " · due " + longDay(x.due), pill: "DUE" });
+    });
+    var waiting = allAssignments().filter(function (a) { return a.pct == null && a.status !== "nfg" && a.due && a.due < t && days(a.due, t) <= 21; });
+    if (waiting.length) also.push({ title: waiting.length + (waiting.length === 1 ? " assignment" : " assignments") + " not graded yet", sub: waiting.slice(0, 2).map(function (a) { return a.name; }).join(" and ") + (waiting.length > 2 ? " and more" : "") + ". Turned in?", pill: "CHECK" });
+    if (also.length) {
+      h += '<div class="stack"><h2 class="sec">Also This Week</h2>' + also.map(function (a) {
+        return '<div class="panel row"' + (a.ev ? ' role="button" tabindex="0" data-go="plan" data-ev="' + esc(a.ev) + '"' : '') + '><div class="stack" style="gap:4px"><div style="font-size:19px;font-weight:700">' + esc(a.title) + '</div><div class="small">' + esc(a.sub) + '</div></div><span class="pill">' + a.pill + '</span></div>';
+      }).join("") + '</div>';
+    }
+    var aw = awards();
+    h += '<button class="panel row" data-go="trophy" style="border:0;color:inherit;text-align:left;width:100%"><div class="row" style="justify-content:flex-start;gap:16px">' + trophy(40) + '<div class="stack" style="gap:2px"><div style="font-size:19px;font-weight:800">Trophy Case</div><div class="small">' + aw.trophies.length + ' trophies · ' + aw.medals.length + ' medals · ' + aw.balls + ' balls</div></div></div><span class="pill gold">OPEN</span></button>';
+    h += '<div class="status">' + esc(statusLine()) + '</div>';
+    return h;
+  }
+
+  function viewPlan() {
+    var evs = events(), games = evs.filter(function (e) { return e.kind === "test"; }), scr = evs.filter(function (e) { return e.kind === "quiz"; });
+    var t = today(), allP = [];
+    evs.forEach(function (e) { practicesFor(e).forEach(function (p) { if (days(t, p.date) <= 7) allP.push(p); }); });
+    allP.sort(function (a, b) { return a.date.localeCompare(b.date); });
+    var tonightN = allP.filter(function (p) { return p.date === t; }).length;
+    var h = '<div class="stack" style="gap:6px"><div class="eyebrow">Coach</div><h1 style="font-size:34px;font-weight:800">Your Game Plan This Week</h1></div>';
+    var bk = [
+      ["game", "Tests", games.length + (games.length === 1 ? " Game" : " Games"), games[0] ? games[0].className + " · " + wk(games[0].due) : "None posted"],
+      ["scrimmage", "Quizzes", scr.length + (scr.length === 1 ? " Scrimmage" : " Scrimmages"), scr[0] ? scr[0].className + " · " + wk(scr[0].due) : "None posted"],
+      ["practices", "Studying", allP.length + (allP.length === 1 ? " Practice" : " Practices"), tonightN ? tonightN + " tonight" : "None tonight"]
+    ];
+    h += '<div class="buckets">' + bk.map(function (b) { return '<button class="bucket" data-bucket="' + b[0] + '" aria-pressed="' + (ui.bucket === b[0]) + '"><span class="k">' + b[1] + '</span><span class="n">' + esc(b[2]) + '</span><span class="x">' + esc(b[3]) + '</span></button>'; }).join("") + '</div>';
+
+    if (ui.bucket === "practices") {
+      if (!allP.length) return h + '<div class="empty">No practices this week. When a test or quiz is posted, practices show up here automatically.</div>';
+      h += '<div class="stack"><div class="sub">Short sessions that get you ready. Tap one when it\'s done. Every finished practice puts a ball in your Trophy Case.</div>';
+      h += allP.map(function (p, i) {
+        var done = !!mine.done[p.id];
+        return '<button class="prac' + (done ? " done" : "") + (p.date === t && !done ? " next" : "") + '" data-done="' + esc(p.id) + '"><span><span class="d">' + esc(p.date === t ? "Tonight" : wk(p.date)) + ' · ' + (p.ev.kind === "test" ? "Game" : "Scrimmage") + ' · ' + esc(p.ev.className) + '</span><span class="w" style="display:block">' + esc(p.what) + ' · ' + p.mins + ' min</span></span><span class="s">' + (done ? "Done ✓" : "Tap When Done") + '</span></button>';
+      }).join("") + '</div>';
+      return h;
+    }
+
+    var pool = ui.bucket === "game" ? games : scr;
+    if (!pool.length) return h + '<div class="empty">No ' + (ui.bucket === "game" ? "tests" : "quizzes") + ' posted right now. New ones from ParentVUE and teacher posts show up here.</div>';
+    var ev = pool.filter(function (e) { return e.id === ui.ev; })[0] || pool[0];
+    ui.ev = ev.id;
+    if (pool.length > 1) h += '<div class="picker">' + pool.map(function (e) { return '<button data-ev="' + esc(e.id) + '" aria-pressed="' + (e.id === ev.id) + '">' + esc(e.className) + ' · ' + esc(wk(e.due)) + '</button>'; }).join("") + '</div>';
+    var d = days(t, ev.due), word = ev.kind === "test" ? "game" : "scrimmage";
+    h += '<div class="row" style="align-items:flex-end"><div class="stack" style="gap:6px"><div class="small" style="font-weight:800;letter-spacing:.12em;text-transform:uppercase">' + (ev.kind === "test" ? "Game" : "Scrimmage") + ' · ' + esc(ev.className) + '</div><h2 style="font-size:30px;font-weight:800">' + esc(ev.title) + '</h2><div class="sub">' + (d === 0 ? "Kickoff today" : "Kickoff " + esc(longDay(ev.due))) + '</div></div><div class="score" style="padding:10px 18px;flex:none"><b style="font-size:44px">' + d + '</b><span>DAYS</span></div></div>';
+    var tabs = [["when", "When", "Practices"], ["what", "What", "Scouting"], ["how", "How", "Moves & Skills"], ["why", "Why", "Pep Talk"]];
+    h += '<div class="ptabs">' + tabs.map(function (x) { return '<button data-tab="' + x[0] + '" aria-pressed="' + (ui.tab === x[0]) + '"><b>' + x[1] + '</b><span>' + x[2] + '</span></button>'; }).join("") + '</div>';
+
+    var ps = practicesFor(ev), topics = topicsFor(ev);
+    if (ui.tab === "when") {
+      h += '<div class="stack"><div style="font-size:20px;font-weight:700">' + ps.length + (ps.length === 1 ? " practice" : " practices") + '. ' + (word === "game" ? "Game" : "Scrimmage") + '-ready by ' + esc(wk(addDays(ev.due, -1))) + ' night.</div>';
+      h += ps.map(function (p, i) {
+        var done = !!mine.done[p.id];
+        return '<button class="prac' + (done ? " done" : "") + (i === 0 && !done ? " next" : "") + '" data-done="' + esc(p.id) + '"><span><span class="d">Practice ' + (i + 1) + ' · ' + esc(p.date === t ? "Tonight" : wk(p.date)) + '</span><span class="w" style="display:block">' + p.mins + ' min · ' + esc(p.what) + '</span></span><span class="s">' + (done ? "Done ✓" : "Tap When Done") + '</span></button>';
+      }).join("") + '<div class="small">Practices land on the nights before. Got soccer that night? Do it before practice or swap with another night.</div></div>';
+    } else if (ui.tab === "what") {
+      h += '<div class="stack"><div style="font-size:20px;font-weight:700">Scouting report: your recent work in ' + esc(ev.className) + '. How ready are you?</div>';
+      h += topics.map(function (tp, i) {
+        var c = mine.conf[confKey(ev, i)] || "";
+        return '<div class="panel topic"><div class="nm">' + esc(tp) + '</div><div class="conf">' +
+          ['yes', 'kinda', 'no'].map(function (v) { return '<button data-conf="' + esc(confKey(ev, i)) + '" data-v="' + v + '" class="' + (c === v ? "on-" + v : "") + '">' + { yes: "Got It", kinda: "Kinda", no: "Not Yet" }[v] + '</button>'; }).join("") + '</div></div>';
+      }).join("") + '<div class="small">' + (ev.note ? esc("From the teacher: " + ev.note) + " · " : "") + 'Start with anything marked "Not Yet."</div></div>';
+    } else if (ui.tab === "how") {
+      var not = topics.filter(function (tp, i) { return mine.conf[confKey(ev, i)] === "no"; });
+      var focus = not[0] || (weakSpot(ev.cls) ? weakSpot(ev.cls).name : topics[0]);
+      var drills = [
+        ["Warm-up move.", "Open your notes for " + topics.slice(0, 2).join(" and ") + ".", "5 min"],
+        ["Skill drill.", "Work on " + focus + ". Redo the questions you missed, or explain it out loud.", (ev.kind === "test" ? 15 : 10) + " min"],
+        ["Cool-down move.", "Close everything. Write down 3 things you remember.", "5 min"]
+      ];
+      h += '<div class="stack"><div style="font-size:20px;font-weight:700">Coach\'s moves for tonight.</div>' + drills.map(function (x, i) {
+        return '<div class="panel drill"><div class="num">' + (i + 1) + '</div><div style="font-size:17px;line-height:1.4"><b>' + x[0] + '</b> ' + esc(x[1]) + '</div><div class="small">' + x[2] + '</div></div>';
+      }).join("") + '<div class="panel" style="background:#1E5A39;font-size:17px;line-height:1.45"><b>Training tip:</b> ' + (ev.kind === "test" ? "you don't get better at soccer by watching. Test yourself instead of rereading." : "say it out loud. If you can say it without looking, you know it.") + '</div></div>';
+    } else {
+      var cat = catFor(ev.cls, ev.kind), last = lastOf(ev.cls, ev.kind), weak = weakSpot(ev.cls), why = [];
+      if (cat && cat.weight != null) why.push([cat.weight + "%", "var(--gold)", "of your " + ev.className + " grade comes from " + (ev.kind === "test" ? "tests" : "quizzes") + "."]);
+      if (last) why.push([String(Math.round(last.pct)), last.pct >= 80 ? "var(--good)" : "var(--mid)", (last.pct >= 80 ? "on your last one (" + last.name + "). You know how to win this." : "on your last one (" + last.name + "). This is your chance to bounce back.")]);
+      if (cat && cat.mark != null && cat.mark < 80) why.push([Math.round(cat.mark) + "%", "var(--mid)", "is your " + (ev.kind === "test" ? "test" : "quiz") + " average right now. One good " + word + " pulls it up fast."]);
+      else if (weak) why.push([String(Math.round(weak.pct)), "var(--mid)", "on " + weak.name + ". Fixing that is the easiest point on the board."]);
+      if (ev.cls && ev.cls.grade) why.push([ev.cls.grade, "var(--white)", "is your " + ev.className + " grade now. Every practice helps protect it."]);
+      h += '<div class="stack"><div style="font-size:20px;font-weight:700">Why this ' + word + ' matters.</div>' + why.slice(0, 3).map(function (w) {
+        return '<div class="panel stack" style="gap:6px"><div class="big" style="color:' + w[1] + '">' + esc(w[0]) + '</div><div style="font-size:17px;line-height:1.4">' + esc(w[2]) + '</div></div>';
+      }).join("") + '</div>';
+    }
+    return h;
+  }
+
+  function viewTrophy() {
+    var aw = awards(), evs = events();
+    var h = '<div class="stack" style="gap:6px"><div class="eyebrow">Trophy Case</div><h1 style="font-size:34px;font-weight:800">Ella\'s Season So Far</h1><div class="sub">Look how much you\'ve already done.</div></div>';
+    h += '<div class="board"><div><b>' + aw.trophies.length + '</b><span>TROPHIES · GAMES</span></div><div><b>' + aw.medals.length + '</b><span>MEDALS · SCRIMMAGES</span></div><div><b>' + aw.balls + '</b><span>BALLS · PRACTICES</span></div></div>';
+    h += viewTournaments();
+    h += '<div class="stack" style="gap:8px"><h2 class="sec">Trophies · Tests Scored 80+</h2>';
+    if (aw.trophies.length) h += '<div class="shelf"><div class="awards">' + aw.trophies.map(function (a) { return '<div class="award">' + trophy(70) + '<b>' + Math.round(a.pct) + '</b><small>' + esc(shortName(a.cls)) + '<br>' + esc(a.name) + '</small></div>'; }).join("") + '</div></div><div class="shelf-grass"></div>';
+    else h += '<div class="empty">Your first trophy goes here after a test scored 80 or higher.</div>';
+    h += '</div><div class="stack" style="gap:8px"><h2 class="sec">Medals · Quizzes Scored 80+</h2>';
+    if (aw.medals.length) h += '<div class="panel medals">' + aw.medals.map(function (a) { return '<div class="award" style="padding-bottom:0">' + medal(50) + '<b style="font-size:17px">' + Math.round(a.pct) + '</b><small>' + esc(shortName(a.cls)) + '<br>' + esc(a.name) + '</small></div>'; }).join("") + '</div>';
+    else h += '<div class="empty">Medals show up after quizzes scored 80 or higher.</div>';
+    h += '</div><div class="stack" style="gap:8px"><h2 class="sec">Balls · Practices And Perfect Work</h2><div class="panel" style="background:#1E5A39"><div class="balls">';
+    for (var i = 0; i < aw.balls; i++) h += ball(36);
+    h += '</div>' + (aw.balls ? '' : '<div>Finish a practice to score your first ball.</div>') + '</div><div class="small">' + aw.perfect + ' assignments with full marks + ' + aw.practices + ' finished practices.</div></div>';
+    var up = evs.slice(0, 3);
+    if (up.length) h += '<div class="stack" style="gap:8px"><h2 class="sec" style="color:var(--muted)">Up Next On The Shelf</h2>' + up.map(function (e) {
+      return '<div class="empty row" style="justify-content:flex-start;gap:14px">' + (e.kind === "test" ? trophy(34, true) : medal(30, true)) + '<div><b>' + (e.kind === "test" ? "Trophy" : "Medal") + ':</b> ' + esc(e.className) + ' ' + (e.kind === "test" ? "game" : "scrimmage") + ', ' + esc(wk(e.due)) + '</div></div>';
+    }).join("") + '</div>';
+    return h;
+  }
+
+  function viewTournaments() {
+    var m = D.meta || {}, t = today(), periods = Array.isArray(m.periods) ? m.periods : [];
+    var graded = (D.classes || []).filter(function (c) { return c.graded; });
+    var h = '<div class="stack" style="gap:8px"><h2 class="sec">Tournaments · Grading Periods</h2><div class="small">Finish a grading period at 90 or higher in a class to win that tournament. Finish the semester at 90 or higher to win the championship.</div>';
+    var won = 0;
+    periods.forEach(function (p, i) {
+      var state = t > p.end ? "done" : t >= p.start ? "live" : "next";
+      var wins = [], close = [], losses = 0;
+      if (state === "done" && i === 0) {
+        graded.forEach(function (c) { if (c.firstProgressPct != null) { if (c.firstProgressPct >= 90) wins.push([shortName(c), c.firstProgressPct]); else losses++; } });
+      } else if (state === "live") {
+        graded.forEach(function (c) { if (c.gradePct != null) { if (c.gradePct >= 90) wins.push([shortName(c), c.gradePct]); else { losses++; if (c.gradePct >= 85) close.push([shortName(c), c.gradePct]); } } });
       }
-      var b = band(c.grade);
-      var count = all.filter(function (a) { return a.cls === "p" + c.period; }).length;
-      var weights = h("div", { class: "weights" });
-      (c.categories || []).forEach(function (w) {
-        var has = w.mark != null;
-        weights.append(h("div", { class: "w" },
-          h("span", { text: w.type }),
-          h("span", { class: "wt", text: (w.weight != null ? w.weight + "%" : "") }),
-          has ? h("span", { class: "mk g-" + band(w.mark) }, bar(w.mark), String(Math.round(w.mark)))
-              : h("span", { class: "mk none", text: "Nothing yet" })));
-      });
-      var facts = h("div", { class: "facts" },
-        h("div", null, h("span", { text: "Now" }), h("b", { text: c.grade + (c.gradePct != null ? " (" + pctText(c.gradePct) + ")" : "") })),
-        c.firstProgress ? h("div", null, h("span", { text: c.firstProgressLabel || "1st Six Weeks report" }), h("b", { text: c.firstProgress })) : null,
-        h("div", null, h("span", { text: "Assignments" }), h("b", { text: count })),
-        c.code ? h("div", null, h("span", { text: "Course number" }), h("b", { text: c.code })) : null);
-      var show = h("button", { class: "btn primary", type: "button", text: "Show " + c.name + " Assignments" });
-      show.addEventListener("click", function () {
-        state.cls = "p" + c.period; state.status = "all"; save(); renderList();
-        $("#all").scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-      var contact = h("div", { class: "contact" },
-        h("span", { text: c.teacher }),
-        c.email ? h("span", { class: "email", text: c.email }) : null,
-        c.email ? copyBtn(c.email) : null);
-      var det = h("details", null,
-        h("summary", null,
-          h("span", { class: "per", text: "P" + c.period }),
-          h("span", { class: "cname" }, h("strong", { text: c.name }), h("small", { text: sub })),
-          h("span", { class: "gradebox g-" + b }, bar(c.gradePct, "big"), h("span", { class: "grade", text: c.grade }), h("span", { class: "chev", "aria-hidden": "true" }))),
-        h("div", { class: "cbody" },
-          facts,
-          h("div", null, h("h3", { text: "How The Grade Is Built" }), weights),
-          h("div", null, h("h3", { text: "Teacher" }), contact),
-          h("div", null, show)));
-      ol.append(h("li", null, det));
-    });
-  }
-
-  function chipFor(st, label) { return h("span", { class: "chip " + st, text: label }); }
-
-  function renderAttention(all) {
-    var ul = $("#attention"); ul.replaceChildren();
-    var rows = [];
-    all.filter(function (a) { return a.st === "zero"; })
-      .sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); })
-      .forEach(function (a) { rows.push({ when: "Due " + fmt(a.due), name: a.name, sub: a.className + " · " + (a.type || "Assignment") + " · " + a.score, chip: chipFor("zero", "Zero") }); });
-    all.filter(function (a) { return a.st === "notgraded"; })
-      .sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); })
-      .forEach(function (a) { rows.push({ when: "Due " + fmt(a.due), name: a.name, sub: a.className + " · " + (a.type || "Assignment") + " · not graded yet", chip: chipFor("notgraded", "Not Graded") }); });
-    var lows = [];
-    (state.classes || []).forEach(function (c) {
-      (c.categories || []).forEach(function (w) { if (w.mark != null && w.mark < 70) lows.push({ c: c, w: w }); });
-    });
-    lows.sort(function (a, b) { return a.w.mark - b.w.mark; }).forEach(function (x) {
-      rows.push({ when: x.c.name, name: x.w.type + " at " + Math.round(x.w.mark) + "%", sub: x.w.weight + "% of the " + x.c.name + " grade", chip: chipFor("low", "Low Category") });
-    });
-    if (!rows.length) { ul.append(h("li", { class: "status", text: (state.classes ? "Nothing needs attention right now." : "Nothing to show yet.") })); return; }
-    rows.forEach(function (r) {
-      ul.append(h("li", null, h("span", { class: "when", text: r.when }), h("span", { class: "what" }, h("strong", { text: r.name }), h("small", { text: r.sub })), r.chip));
-    });
-  }
-
-  function upcomingItems(all) {
-    var today = todayISO(), rows = [];
-    all.filter(function (a) { return a.st === "upcoming"; }).forEach(function (a) {
-      rows.push({ due: a.due, title: a.name, sub: a.className + " · " + (a.type || "Assignment"), src: "ParentVUE gradebook" });
-    });
-    var c = state.ctls && Array.isArray(state.ctls.items) ? state.ctls.items : [];
-    c.forEach(function (x) {
-      if (x.due && x.due < today) return;
-      var kind = x.kind ? x.kind + (x.time ? ", due " + x.time : "") : "";
-      rows.push({ due: x.due || null, whenText: x.whenText || "", title: x.title, sub: [x.className, kind].filter(Boolean).join(" · "), src: x.source || "CTLS", note: x.note || "" });
-    });
-    rows.sort(function (a, b) {
-      if (!a.due && !b.due) return 0;
-      if (!a.due) return -1;
-      if (!b.due) return 1;
-      return a.due.localeCompare(b.due);
-    });
-    return rows;
-  }
-
-  function renderUpcoming(all) {
-    var ul = $("#upcoming"); ul.replaceChildren();
-    var up = upcomingItems(all);
-    if (!up.length) { ul.append(h("li", { class: "status", text: state.classes ? "Nothing upcoming is posted in ParentVUE or CTLS." : "Nothing to show yet." })); return; }
-    var today = todayISO();
-    up.forEach(function (a) {
-      var chip;
-      if (!a.due) chip = chipFor("notgraded", "No Due Date");
-      else {
-        var d = days(today, a.due);
-        chip = chipFor("upcoming", d === 0 ? "Due Today" : d === 1 ? "Due Tomorrow" : "In " + d + " Days");
+      var hasRecord = state !== "next" && (wins.length + losses) > 0;
+      var record = hasRecord ? '<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:var(--good)">' + wins.length + ' W</span><span style="font-size:26px;font-weight:800;color:var(--dim)">\u2013</span><span style="font-size:34px;font-weight:800;color:var(--muted)">' + losses + ' L</span><span class="small">' + (state === "done" ? "Final record" : "Record so far") + '</span></div>' : '';
+      if (state === "done") won += wins.length;
+      var tag = state === "done" ? "FINAL" : state === "live" ? "IN PROGRESS · ENDS " + fmt(p.end).toUpperCase() : "STARTS " + fmt(p.start).toUpperCase();
+      h += '<div class="panel stack" style="gap:12px"><div class="row"><div style="font-size:19px;font-weight:800">' + esc(p.name) + ' Tournament</div><span class="pill' + (state === "live" ? " gold" : "") + '">' + tag + '</span></div>' + record;
+      if (state === "done") {
+        h += wins.length ? '<div class="awards">' + wins.map(function (w) { return '<div class="award" style="padding-bottom:0">' + cup(60) + '<b>' + Math.round(w[1]) + '</b><small>' + esc(w[0]) + '</small></div>'; }).join("") + '</div>'
+          : '<div class="small">' + (i === 0 ? "No 90s this round. Next tournament is a fresh start." : "Results show here once the period wraps up.") + '</div>';
+      } else if (state === "live") {
+        h += (wins.length ? '<div class="small" style="color:var(--good);font-weight:700">On track to win: ' + esc(wins.map(function (w) { return w[0] + " (" + Math.round(w[1]) + ")"; }).join(", ")) + '</div>' : '') +
+          (close.length ? '<div class="small" style="color:var(--mid);font-weight:700">Within reach: ' + esc(close.map(function (w) { return w[0] + " (" + Math.round(w[1]) + ")"; }).join(", ")) + '</div>' : '') +
+          (!wins.length && !close.length ? '<div class="small">Every class starts at zero wins. Get a class to 90 to put a trophy in play.</div>' : '');
+      } else {
+        h += '<div class="small">Coming up. Every class can win this one.</div>';
       }
-      ul.append(h("li", null,
-        h("span", { class: "when", text: a.due ? fmt(a.due, { weekday: "short", month: "short", day: "numeric" }) : (a.whenText || "This week") }),
-        h("span", { class: "what" }, h("strong", { text: a.title }), h("small", { text: a.sub }),
-          h("small", { class: "src", text: "Source: " + a.src + (a.note ? ". " + a.note : "") })),
-        chip));
+      h += '</div>';
     });
+    var semEnd = periods.length ? periods[periods.length - 1].end : null;
+    var champs = graded.filter(function (c) { return c.gradePct != null && c.gradePct >= 90; });
+    h += '<div class="panel row" style="justify-content:flex-start;gap:16px;background:#1A2F63">' + cup(56, true) + '<div class="stack" style="gap:4px"><div style="font-size:19px;font-weight:800">Semester Championship</div><div class="small">' +
+      (semEnd && t > semEnd ? (champs.length ? "Champion in " + esc(champs.map(shortName).join(", ")) + "!" : "Season over. A new championship starts next semester.") :
+        "Finish a class at 90+ by " + esc(semEnd ? fmt(semEnd, { month: "long", day: "numeric" }) : "the end of the semester") + ". " + (champs.length ? "On track in " + esc(champs.map(shortName).join(", ")) + "." : "Pick one class to make your title run.")) +
+      '</div></div></div></div>';
+    tournamentWins = won;
+    return h;
+  }
+  var tournamentWins = 0;
+  function viewGrades() {
+    var m = D.meta || {};
+    var h = '<div class="stack" style="gap:6px"><div class="eyebrow">My Stats</div><h1 style="font-size:34px;font-weight:800">Grades</h1><div class="sub">' + esc(m.currentPeriod || "") + ' · semester-to-date, from ParentVUE</div></div><div class="stack" style="gap:10px">';
+    (D.classes || []).forEach(function (c) {
+      if (!c.graded) return;
+      var open = !!ui.open[c.period], up = c.firstProgressPct != null && c.gradePct != null ? c.gradePct - c.firstProgressPct : null;
+      h += '<button class="cls" data-cls="' + c.period + '" aria-expanded="' + open + '"><span class="small" style="font-weight:800">P' + c.period + '</span><span><span style="display:block;font-size:18px;font-weight:700">' + esc(c.name) + '</span><span class="small">' + esc(c.teacher || "") + (up != null ? ' · ' + (up >= 0 ? "▲ " : "▼ ") + 'from ' + esc(c.firstProgress) : '') + '</span></span><span class="g g-' + band(c.gradePct) + '">' + esc(c.grade) + '</span></button>';
+      if (open) {
+        h += '<div class="panel cats">' + (c.categories || []).map(function (w) {
+          return '<div class="c"><span>' + esc(w.type) + '</span><span class="small">' + (w.weight != null ? w.weight + "%" : "") + '</span><b class="g-' + (w.mark != null ? band(w.mark) : "b") + '">' + (w.mark != null ? Math.round(w.mark) : "–") + '</b></div>';
+        }).join("") + (c.email ? '<div class="small">' + esc(c.email) + '</div>' : '') + '</div>';
+      }
+    });
+    return h + '</div>';
   }
 
-  function renderList() {
-    if (!state.classes) {
-      $("#f-class").replaceChildren(); $("#f-status").replaceChildren();
-      $("#count").textContent = ""; $("#all-aside").textContent = "";
-      $("#list").replaceChildren(h("div", { class: "status", text: "Assignments appear here once the data loads." }));
-      return;
-    }
-    var all = items();
-    var classes = (state.classes || []).filter(function (c) { return c.graded; });
-    if (state.cls !== "all" && !classes.some(function (c) { return "p" + c.period === state.cls; })) state.cls = "all";
-    if (!STATUS.some(function (s) { return s.key === state.status; })) state.status = "all";
-
-    var fc = $("#f-class"); fc.replaceChildren();
-    var mk = function (key, label, n, active, onClick) {
-      var b = h("button", { type: "button", "aria-pressed": active ? "true" : "false" }, label, h("span", { class: "n", text: n }));
-      b.addEventListener("click", onClick);
-      return b;
-    };
-    fc.append(mk("all", "All Classes", all.length, state.cls === "all", function () { state.cls = "all"; save(); renderList(); }));
-    classes.forEach(function (c) {
-      var key = "p" + c.period;
-      var n = all.filter(function (a) { return a.cls === key; }).length;
-      fc.append(mk(key, c.name, n, state.cls === key, function () { state.cls = key; save(); renderList(); }));
-    });
-
-    var inClass = all.filter(function (a) { return state.cls === "all" || a.cls === state.cls; });
-    var fs = $("#f-status"); fs.replaceChildren();
-    STATUS.forEach(function (s) {
-      var n = s.key === "all" ? inClass.length : inClass.filter(function (a) { return a.st === s.key; }).length;
-      fs.append(mk(s.key, s.label, n, state.status === s.key, function () { state.status = s.key; save(); renderList(); }));
-    });
-
-    var q = state.q.trim().toLowerCase();
-    var shown = inClass.filter(function (a) {
-      if (state.status !== "all" && a.st !== state.status) return false;
-      if (!q) return true;
-      return [a.name, a.type, a.notes, a.className, a.score].join(" ").toLowerCase().indexOf(q) !== -1;
-    }).sort(function (a, b) {
-      var c = (a.due || "").localeCompare(b.due || "");
-      if (!c) c = (a.name || "").localeCompare(b.name || "");
-      return state.sort === "asc" ? c : -c;
-    });
-
-    $("#f-sort").textContent = state.sort === "asc" ? "Oldest First" : "Newest First";
-    $("#f-sort").setAttribute("aria-label", "Sort by due date, currently " + (state.sort === "asc" ? "oldest first" : "newest first"));
-    $("#count").textContent = state.classes ? ("Showing " + shown.length + " of " + all.length + " assignments") : "";
-    $("#all-aside").textContent = state.classes ? "Tap a filter to narrow the list" : "";
-
-    var list = $("#list"); list.replaceChildren();
-    if (!state.classes) { list.append(h("div", { class: "status", text: "Assignments appear here once the data loads." })); return; }
-    if (!shown.length) {
-      var clr = h("button", { class: "btn", type: "button", text: "Clear Filters" });
-      clr.addEventListener("click", clearFilters);
-      list.append(h("div", { class: "status" }, h("strong", { text: "No assignments match" }), h("p", { style: "margin:0 0 10px", text: "Try another class, status or search term." }), clr));
-      return;
-    }
-    shown.forEach(function (a) {
-      var scoreEl;
-      if (a.st === "zero") scoreEl = h("div", { class: "a-score" }, chipFor("zero", "Zero"), h("small", { style: "display:block", text: a.score }));
-      else if (a.st === "upcoming") scoreEl = h("div", { class: "a-score" }, chipFor("upcoming", "Coming Up"));
-      else if (a.st === "notgraded") scoreEl = h("div", { class: "a-score" }, chipFor("notgraded", "Not Graded"));
-      else if (a.st === "nfg") scoreEl = h("div", { class: "a-score" }, chipFor("nfg", "Not For Grading"), a.score ? h("small", { style: "display:block", text: a.score }) : null);
-      else scoreEl = h("div", { class: "a-score" }, h("b", { class: "p-" + band(a.pct), text: pctText(a.pct) }), h("small", { text: a.score }));
-      var dueTxt = fmt(a.due);
-      list.append(h("div", { class: "arow", role: "listitem" },
-        h("span", { class: "a-due", text: dueTxt }),
-        h("span", { class: "a-cls", "data-due": dueTxt, text: a.className }),
-        h("span", { class: "a-name" }, h("strong", { text: a.name }), a.notes ? h("small", { text: "Note: " + a.notes }) : null),
-        h("span", { class: "a-type", text: a.type || "" }),
-        scoreEl));
-    });
+  function viewSchedule() {
+    var t = today(), list = allAssignments().map(function (a) { return Object.assign({ k: kindOf(a) }, a); });
+    var f = ui.filter;
+    var shown = list.filter(function (a) {
+      if (f === "upcoming") return a.due && a.due >= t;
+      if (f === "games") return a.k === "test";
+      if (f === "scrimmages") return a.k === "quiz";
+      if (f === "waiting") return a.pct == null && a.status !== "nfg" && a.due && a.due < t;
+      return true;
+    }).sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); });
+    var fl = [["all", "All"], ["upcoming", "Coming Up"], ["games", "Games"], ["scrimmages", "Scrimmages"], ["waiting", "Not Graded Yet"]];
+    var h = '<div class="stack" style="gap:6px"><div class="eyebrow">Full Schedule</div><h1 style="font-size:34px;font-weight:800">Every Assignment</h1></div>';
+    h += '<div class="filters">' + fl.map(function (x) { return '<button data-filter="' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>';
+    h += '<div class="panel">' + (shown.length ? shown.map(function (a) {
+      var right = a.pct != null ? '<b class="g-' + band(a.pct) + '">' + (Math.round(a.pct * 10) / 10) + '%</b>' : a.status === "nfg" ? '<span class="small">Not for grading</span>' : (a.due && a.due >= t ? '<span class="pill gold">COMING UP</span>' : '<span class="pill">NOT GRADED</span>');
+      return '<div class="asg"><span class="small">' + esc(fmt(a.due)) + '</span><span><span style="display:block;font-weight:700">' + esc(a.name) + '</span><span class="small">' + esc(a.cls.name) + (a.k !== "work" ? " · " + (a.k === "test" ? "Game" : "Scrimmage") : "") + '</span></span>' + right + '</div>';
+    }).join("") : '<div class="msg" style="padding:20px">Nothing here.</div>') + '</div>';
+    return h;
   }
 
-  function clearFilters() {
-    state.cls = "all"; state.status = "all"; state.q = ""; $("#f-q").value = ""; save(); renderList();
+  function statusLine() {
+    var m = D.meta || {};
+    var when = m.syncedAt ? new Date(m.syncedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : fmt(m.updated);
+    return "Grades from ParentVUE, updated " + when + ". Due dates from ParentVUE and teacher posts in CTLS.";
   }
 
+  var VIEWS = { home: ["Home", viewHome], plan: ["Coach", viewPlan], trophy: ["Trophies", viewTrophy], grades: ["Grades", viewGrades], schedule: ["Schedule", viewSchedule] };
+  function renderTabs() {
+    document.getElementById("tabs").innerHTML = Object.keys(VIEWS).map(function (k) {
+      return '<button data-go="' + k + '"' + (ui.view === k ? ' aria-current="page"' : '') + '>' + navIcons[k] + VIEWS[k][0] + '</button>';
+    }).join("");
+  }
   function render() {
-    var all = items();
-    renderHeader(all);
-    renderStrip();
-    renderClasses(all);
-    renderAttention(all);
-    renderUpcoming(all);
-    renderList();
+    renderTabs();
+    var app = document.getElementById("app");
+    if (!D) return;
+    clipN = 0;
+    app.innerHTML = VIEWS[ui.view][1]();
+  }
+  function go(view, ev) {
+    ui.view = view;
+    if (ev) { var e = events().filter(function (x) { return x.id === ev; })[0]; if (e) { ui.bucket = e.kind === "test" ? "game" : "scrimmage"; ui.ev = e.id; ui.tab = "when"; } }
+    try { history.replaceState(null, "", "#" + view); } catch (e2) {}
+    render(); window.scrollTo(0, 0);
   }
 
-  var qTimer = null;
-  $("#f-q").addEventListener("input", function (e) {
-    clearTimeout(qTimer);
-    var v = e.target.value;
-    qTimer = setTimeout(function () { state.q = v; renderList(); }, 120);
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-go],[data-bucket],[data-ev],[data-tab],[data-done],[data-conf],[data-cls],[data-filter]");
+    if (!el) return;
+    if (el.dataset.go) return go(el.dataset.go, el.dataset.ev);
+    if (el.dataset.bucket) { ui.bucket = el.dataset.bucket; ui.ev = null; ui.tab = "when"; return render(); }
+    if (el.dataset.ev) { ui.ev = el.dataset.ev; return render(); }
+    if (el.dataset.tab) { ui.tab = el.dataset.tab; return render(); }
+    if (el.dataset.done) { mine.done[el.dataset.done] = !mine.done[el.dataset.done]; saveMine(); return render(); }
+    if (el.dataset.conf) { var k = el.dataset.conf; mine.conf[k] = mine.conf[k] === el.dataset.v ? "" : el.dataset.v; saveMine(); return render(); }
+    if (el.dataset.cls) { ui.open[el.dataset.cls] = !ui.open[el.dataset.cls]; return render(); }
+    if (el.dataset.filter) { ui.filter = el.dataset.filter; return render(); }
   });
-  $("#f-sort").addEventListener("click", function () { state.sort = state.sort === "asc" ? "desc" : "asc"; save(); renderList(); });
-  $("#f-clear").addEventListener("click", clearFilters);
+  document.addEventListener("keydown", function (e) {
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches("[role=button][data-go]")) { e.preventDefault(); e.target.click(); }
+  });
 
-  function showMessage(title, body) {
-    $("#updated").textContent = body;
-    var ol = $("#classes"); ol.replaceChildren(h("li", { class: "status" }, h("strong", { text: title }), body));
-  }
-
-  // Live data from the family Google Sheet through its Apps Script feed (?view=ella)
-  var API_KEY_URL = "newman_school_script_url", API_KEY_PASS = "newman_school_script_key", CACHE = "ella-dashboard-cache-v1";
-  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  /* ---------- live data ---------- */
   function takeSetupLink() {
     try {
       var p = new URLSearchParams(location.search), api = p.get("api");
       if (api && /^https:\/\/script\.google(usercontent)?\.com\//.test(api)) { store(API_KEY_URL, api); store(API_KEY_PASS, p.get("key") || ""); }
-      if (p.has("api") || p.has("key")) history.replaceState(null, "", location.pathname);
+      if (p.has("api") || p.has("key")) history.replaceState(null, "", location.pathname + location.hash);
     } catch (e) {}
   }
-  function apply(d) {
-    state.meta = d.meta || null; state.ctls = d.ctls || null; state.classes = Array.isArray(d.classes) ? d.classes : [];
-    render();
-  }
-  var DEFAULT_API = "https://script.google.com/macros/s/AKfycbxNkbjYQDpXh_BDXwxtEEnqX5JtMm3BAOi9RBpiIptpsfgy3VoU-FP3L4xf0Qo_ng81pQ/exec";
+  function apply(d) { D = { meta: d.meta || {}, ctls: d.ctls || null, classes: Array.isArray(d.classes) ? d.classes : [] }; render(); }
   var busy = false;
   function load() {
     var api = store(API_KEY_URL) || DEFAULT_API, key = store(API_KEY_PASS) || "";
-    if (!api) { showMessage("Setup needed", "Open the setup link once on this device to connect it to the family sheet."); return; }
     if (busy) return; busy = true;
     var url = api + (api.indexOf("?") >= 0 ? "&" : "?") + "view=ella" + (key ? "&key=" + encodeURIComponent(key) : "");
     fetch(url, { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
-      if (!d || d.error || !Array.isArray(d.classes)) { if (!state.classes) showMessage("Couldn't load the data", (d && d.error) || "The family sheet didn't answer. It will try again shortly."); return; }
+      if (!d || d.error || !Array.isArray(d.classes)) { if (!D) document.getElementById("app").innerHTML = '<div class="msg">Couldn\'t reach the family sheet. Trying again shortly.</div>'; return; }
       store(CACHE, JSON.stringify(d)); apply(d);
     }).catch(function () {
-      if (!state.classes) showMessage("Offline", "No saved copy yet. Connect to the internet to load Ella's dashboard.");
+      if (!D) document.getElementById("app").innerHTML = '<div class="msg">You\'re offline and there\'s no saved copy yet.</div>';
     }).then(function () { busy = false; });
   }
+
   takeSetupLink();
-  renderList();
+  var h0 = (location.hash || "").replace("#", "");
+  if (VIEWS[h0]) ui.view = h0;
+  renderTabs();
   try { var cached = JSON.parse(store(CACHE) || "null"); if (cached && Array.isArray(cached.classes)) apply(cached); } catch (e) {}
   load();
   setInterval(load, 5 * 60 * 1000);
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { load(); render(); } });
   window.addEventListener("online", load);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
 })();

@@ -1,6 +1,6 @@
 // Family Hub app worker: keeps the app itself available offline.
 // Card data never passes through here; it comes live from the Google Sheet.
-const CACHE = "ella-dashboard-v2";
+const CACHE = "ella-dashboard-v3";
 const SHELL = [
   "./",
   "./index.html",
