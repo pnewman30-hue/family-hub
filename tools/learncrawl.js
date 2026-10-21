@@ -150,11 +150,19 @@ window.__job = (async function () {
         const r = await fetch(full(i.url), { credentials: 'include' });
         if (!r.ok) { skipped++; continue; }
         const blob = await r.blob();
-        if (blob.size > 30 * 1024 * 1024) { skipped++; continue; }
-        const b64 = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.readAsDataURL(blob); });
         let name = i.name; const ext = (k.match(/\.(\w+)$/) || [])[1];
         if (ext && !new RegExp('\\.' + ext + '$', 'i').test(name)) name = name.replace(/\.\w+$/, '') + '.' + ext;
-        const res = await post({ action: 'mirror_put', kid: kid, key: k, name: name, mime: ({ pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', doc: 'application/msword', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', ppt: 'application/vnd.ms-powerpoint', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', mp4: 'video/mp4', mp3: 'audio/mpeg' })[String(ext || '').toLowerCase()] || 'application/octet-stream', b64: b64 });
+        const mime = ({ pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', doc: 'application/msword', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', ppt: 'application/vnd.ms-powerpoint', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', mp4: 'video/mp4', mp3: 'audio/mpeg' })[String(ext || '').toLowerCase()] || 'application/octet-stream';
+        let res;
+        if (blob.size > 25 * 1024 * 1024) {
+          // Big files go straight to a Drive upload session opened by the feed
+          const s = await post({ action: 'mirror_session', kid: kid, key: k, name: name, mime: mime });
+          if (s.id) res = s;
+          else if (s.uploadUrl) { const up = await fetch(s.uploadUrl, { method: 'PUT', headers: { 'Content-Type': mime }, body: blob }); const j = await up.json().catch(() => ({})); if (j.id) res = await post({ action: 'mirror_done', key: k, id: j.id }); }
+        } else {
+          const b64 = await new Promise(rs => { const fr = new FileReader(); fr.onload = () => rs(String(fr.result).split(',')[1] || ''); fr.readAsDataURL(blob); });
+          res = await post({ action: 'mirror_put', kid: kid, key: k, name: name, mime: mime, b64: b64 });
+        }
         if (res && res.id) { ids[k] = res.id; copied++; } else skipped++;
       } catch (e) { skipped++; }
     }
