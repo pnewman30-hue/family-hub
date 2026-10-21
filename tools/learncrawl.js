@@ -67,7 +67,7 @@ window.__job = (async function () {
   const lines = document.body.innerText.split('\n').map(x => x.trim());
   const teacherOf = {};
   names.forEach(n => { const i = lines.indexOf(n); if (i >= 0) for (let j = i + 1; j < i + 4; j++) if (/Instructor/.test(lines[j] || '')) { teacherOf[n] = lines[j + 1] || ''; break; } });
-  const who = (document.body.innerText.match(/Welcome,\s*(\w+)/) || [])[1] || '';
+  const who = (document.body.innerText.match(/Welcome,\s*(\w+)/) || document.documentElement.innerHTML.match(/(Ella|Olivia) Newman/) || [])[1] || '';
   for (const n of names) {
     const rec = { items: [] };
     try {
