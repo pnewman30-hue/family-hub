@@ -92,6 +92,20 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
   td, th { padding: 9px 8px; }
   .search { width: 100%; }
 }
+.seg { display: inline-flex; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg button { border: 0; background: transparent; border-radius: 9px; padding: 8px 14px; font-size: 14px; font-weight: 700; min-height: 38px; }
+.seg button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); }
+.res-class { display: grid; gap: 8px; }
+.res-class h3 { margin: 6px 0 0; font-size: 17px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.res-class h3 span { font-size: 13px; font-weight: 600; color: var(--muted); }
+.post { padding: 14px 16px; display: grid; gap: 8px; }
+.post .meta { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .02em; }
+.post .t { font-size: 16px; font-weight: 800; }
+.post .s { font-size: 14px; color: var(--muted); line-height: 1.45; }
+.links { display: flex; flex-wrap: wrap; gap: 6px; }
+.lnk { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--info-bg); color: var(--ink); text-decoration: none; border-radius: 9px; padding: 7px 10px; font-size: 13px; font-weight: 700; max-width: 100%; overflow-wrap: anywhere; }
+.lnk.post-l { background: transparent; }
+.lnk svg { width: 15px; height: 15px; flex: none; }
 .print-only { display: none; }
 @media print {
   :root { --bg: #fff; --surface: #fff; --ink: #000; --muted: #444; --line: #ccc; color-scheme: light; }
@@ -129,7 +143,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
   var CACHE = "newman-school-tracker-v1";
   var GIRLS = { ella: { name: "Ella", school: "Lassiter High · 9th grade" }, olivia: { name: "Olivia", school: "Mabry Middle · 6th grade" } };
   var D = null;
-  var ui = { girl: "ella", filter: "all", cls: null, q: "", sort: "desc" };
+  var ui = { girl: "ella", filter: "all", cls: null, q: "", sort: "desc", view: "assign" };
 
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -237,7 +251,9 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
       var sub = esc(x.teacher || "") + (g == null && q1 ? ' · ' + esc(q1) + ' ' + Math.round(x.quarterGrades[q1]) : '');
       return '<button type="button" class="cls" data-cls="' + x.period + '" aria-pressed="' + (ui.cls === x.period) + '"><span class="nm">' + esc(shortName(x.name)) + '</span><span class="t">' + sub + '</span><span class="g ' + band(g) + '">' + (g == null ? "—" : Math.round(g)) + '</span></button>';
     }).join("") + '</div></section>';
+    h += '<section class="toolbar no-print"><div class="seg" role="group" aria-label="Choose a view"><button type="button" data-view="assign" aria-pressed="' + (ui.view === "assign") + '">Assignments</button><button type="button" data-view="res" aria-pressed="' + (ui.view === "res") + '">Teacher Resources (' + resItems(k).length + ')</button></div></section>';
     if (ui.cls != null) h += drill(classes.filter(function (x) { return x.period === ui.cls; })[0], list);
+    if (ui.view === "res") { page.innerHTML = h + resources(k, classes); return; }
     var shown = filtered(list);
     h += '<section class="toolbar no-print"><div class="chips" role="group" aria-label="Filter assignments">' + FILTERS.map(function (f) {
       return '<button type="button" class="chip" data-filter="' + f[0] + '" aria-pressed="' + (ui.filter === f[0]) + '">' + f[1] + (f[0] === "missing" && c.missing ? " (" + c.missing + ")" : "") + '</button>';
@@ -267,7 +283,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
     return '<section class="panel drill"><div class="row"><h2>' + esc(shortName(c.name)) + ' <span class="' + band(g) + '">' + (g == null ? "" : Math.round(g)) + '</span></h2><button type="button" class="btn no-print" data-cls="' + c.period + '">Show all classes</button></div>' +
       '<div class="sub">Period ' + c.period + (c.teacher ? ' · ' + esc(c.teacher) : '') + (c.email ? ' · <span style="user-select:all">' + esc(c.email) + '</span>' : '') + (qg ? ' · ' + esc(qg) : '') + '</div>' +
       (cats.length ? '<div class="cats">' + cats.map(function (x) { return '<div class="cat"><b class="' + band(x.mark) + '">' + (x.mark == null ? "—" : Math.round(x.mark) + "%") + '</b>' + esc(x.type) + (x.weight != null ? ' · ' + x.weight + '% of grade' : '') + '</div>'; }).join("") + '</div>' : '') +
-      '<div class="sub">' + mine.length + ' assignments · ' + cc.missing + ' missing · ' + cc.week + ' due this week · ' + cc.waiting + ' not graded yet</div></section>';
+      '<div class="sub">' + mine.length + ' assignments · ' + cc.missing + ' missing · ' + cc.week + ' due this week · ' + cc.waiting + ' not graded yet \u00b7 ' + resItems(kid()).filter(function (r) { return r.period === c.period; }).length + ' teacher posts</div></section>';
   }
   function table(list) {
     if (!list.length) return '<div class="empty">' + (ui.filter === "missing" ? "Nothing missing here. Nice." : "Nothing matches this view.") + '</div>';
@@ -280,8 +296,56 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
       }).join("") + '</tbody></table>';
   }
 
+  /* ---------- teacher resources ---------- */
+  var ICON = {
+    file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/></svg>',
+    doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"/><path d="M9 13h6M9 17h6M14 3v4h4"/></svg>',
+    video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+    post: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>'
+  };
+  function resItems(k) { return (k.resources && Array.isArray(k.resources.items)) ? k.resources.items : []; }
+  function resFiltered(k) {
+    var q = low(ui.q);
+    return resItems(k).filter(function (r) {
+      if (ui.cls != null && r.period !== ui.cls) return false;
+      if (q && low(r.title + " " + r.summary + " " + r.className + " " + r.teacher + " " + (r.links || []).map(function (l) { return l.label; }).join(" ")).indexOf(q) < 0) return false;
+      return true;
+    });
+  }
+  function resources(k, classes) {
+    var list = resFiltered(k);
+    var h = '<section class="toolbar no-print"><input class="search" id="q" type="search" placeholder="Search teacher posts and files" value="' + esc(ui.q) + '" aria-label="Search teacher resources"><div class="share">' +
+      '<button type="button" class="btn" data-act="text">Text</button><button type="button" class="btn" data-act="email">Email</button><button type="button" class="btn" data-act="copy">Copy</button><button type="button" class="btn primary" data-act="print">Print</button></div></section>';
+    if (!resItems(k).length) return h + '<div class="panel empty">No teacher posts yet. Class posts from CTLSParent show up here within the hour.</div>';
+    if (!list.length) return h + '<div class="panel empty">No teacher posts match this view.</div>';
+    var byClass = {};
+    list.forEach(function (r) { (byClass[r.period] = byClass[r.period] || []).push(r); });
+    classes.forEach(function (c) {
+      var posts = byClass[c.period]; if (!posts) return;
+      var files = posts.reduce(function (n, p) { return n + (p.links || []).filter(function (l) { return l.kind !== "post"; }).length; }, 0);
+      h += '<section class="res-class"><h3>' + esc(shortName(c.name)) + '<span>' + esc(c.teacher || "") + ' \u00b7 ' + posts.length + (posts.length === 1 ? " post" : " posts") + ' \u00b7 ' + files + (files === 1 ? " file or link" : " files and links") + '</span></h3>' +
+        posts.map(function (p) {
+          var links = (p.links || []).slice().sort(function (a, b) { return (a.kind === "post") - (b.kind === "post"); });
+          return '<article class="panel post"><div class="meta">' + esc(wd(p.date) + " " + fmt(p.date)) + ' \u00b7 ' + esc(p.teacher) + '</div><div class="t">' + esc(p.title) + '</div>' + (p.summary ? '<div class="s">' + esc(p.summary) + (p.summary.length >= 220 ? '\u2026' : '') + '</div>' : '') +
+            (links.length ? '<div class="links">' + links.map(function (l) { return '<a class="lnk' + (l.kind === "post" ? " post-l" : "") + '" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + (ICON[l.kind] || ICON.link) + esc(l.label || "Open") + '</a>'; }).join("") + '</div>' : '') + '</article>';
+        }).join("") + '</section>';
+    });
+    return h + '<div class="status">From teacher class posts in CTLSParent. Files open directly. "Open post in CTLSParent" asks for your CTLSParent sign-in. Pages that live only inside the girls\' own CTLS class sites aren\'t posted to parents, so they aren\'t here.</div>';
+  }
+
   /* ---------- sharing ---------- */
   function shareText() {
+    if (ui.view === "res") {
+      var rl = resFiltered(kid()), nm = GIRLS[ui.girl].name, cc = ui.cls != null ? realClasses(kid()).filter(function (x) { return x.period === ui.cls; })[0] : null;
+      var out = [nm + " \u00b7 Teacher resources" + (cc ? " \u00b7 " + shortName(cc.name) : "")];
+      rl.slice(0, 15).forEach(function (p) {
+        out.push("\u2022 " + fmt(p.date) + " \u00b7 " + shortName(p.className) + ": " + p.title);
+        (p.links || []).filter(function (l) { return l.kind !== "post"; }).forEach(function (l) { out.push("   " + l.label + ": " + l.url); });
+      });
+      if (!rl.length) out.push("No teacher posts in this view.");
+      return out.join("\n");
+    }
     var list = filtered(rows(kid())), name = GIRLS[ui.girl].name;
     var lines = [name + " · " + viewTitle() + " (" + fmt(today(), { weekday: "short", month: "short", day: "numeric" }) + ")"];
     list.slice(0, 30).forEach(function (r) {
@@ -303,7 +367,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
     document.body.removeChild(ta);
   }
   function share(kind) {
-    var text = shareText(), subject = GIRLS[ui.girl].name + " · " + viewTitle();
+    var text = shareText(), subject = GIRLS[ui.girl].name + " \u00b7 " + (ui.view === "res" ? "Teacher resources" : viewTitle());
     if (kind === "copy") return copy(text);
     if (kind === "print") return window.print();
     if (kind === "text") {
@@ -315,8 +379,9 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
 
   /* ---------- events ---------- */
   document.addEventListener("click", function (e) {
-    var el = e.target.closest("[data-girl],[data-filter],[data-cls],[data-act]");
+    var el = e.target.closest("[data-girl],[data-filter],[data-cls],[data-act],[data-view]");
     if (!el) return;
+    if (el.dataset.view) { ui.view = el.dataset.view; ui.q = ""; return render(); }
     if (el.dataset.girl) { ui.girl = el.dataset.girl; ui.cls = null; try { history.replaceState(null, "", "#" + ui.girl); } catch (x) {} return render(); }
     if (el.dataset.filter) { ui.filter = ui.filter === el.dataset.filter && el.classList.contains("tile") ? "all" : el.dataset.filter; return render(); }
     if (el.dataset.cls) { var p = +el.dataset.cls; ui.cls = ui.cls === p ? null : p; render(); if (ui.cls != null) { var d = document.querySelector(".drill"); if (d) d.scrollIntoView({ block: "nearest" }); } return; }
