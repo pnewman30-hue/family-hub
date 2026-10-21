@@ -341,8 +341,9 @@ details.grp .links { margin-top: 8px; }
       order.map(function (g, i) {
         return '<details class="grp"' + (open || i === 0 ? ' open' : '') + '><summary>' + esc(g) + ' <span>(' + groups[g].length + ')</span></summary><div class="links">' +
           groups[g].map(function (it) {
-            it = { name: it.name, url: String(it.url || "").replace(/^~\//, "https://upload.educationincites.com/gacobb/learn/resources/") };
-            var kind = /\.(mp4|mov)$|youtu/i.test(it.url) ? "video" : /docs\.google|\.docx?$|\.pptx?$|\.xlsx?$/i.test(it.url) ? "doc" : /\.pdf$/i.test(it.url) ? "file" : "link";
+            var u = String(it.url || ""), test = /^gd:/.test(u) ? it.name : u;
+            it = { name: it.name, url: /^gd:/.test(u) ? "https://drive.google.com/file/d/" + u.slice(3) + "/view" : u.replace(/^~\//, "https://upload.educationincites.com/gacobb/learn/resources/") };
+            var kind = /\.(mp4|mov)$|youtu/i.test(test) ? "video" : /docs\.google|\.docx?$|\.pptx?$|\.xlsx?$/i.test(test) ? "doc" : /\.pdf$/i.test(test) ? "file" : "link";
             return it.url ? '<a class="lnk" href="' + esc(it.url) + '" target="_blank" rel="noopener">' + ICON[kind] + esc(it.name) + '</a>' : '<span class="lnk post-l">' + ICON.file + esc(it.name) + '</span>';
           }).join("") + '</div></details>';
       }).join("") + '</section>';
