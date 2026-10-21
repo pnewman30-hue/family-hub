@@ -154,7 +154,7 @@ window.__job = (async function () {
         const b64 = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.readAsDataURL(blob); });
         let name = i.name; const ext = (k.match(/\.(\w+)$/) || [])[1];
         if (ext && !new RegExp('\\.' + ext + '$', 'i').test(name)) name = name.replace(/\.\w+$/, '') + '.' + ext;
-        const res = await post({ action: 'mirror_put', kid: kid, key: k, name: name, mime: blob.type || '', b64: b64 });
+        const res = await post({ action: 'mirror_put', kid: kid, key: k, name: name, mime: ({ pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', doc: 'application/msword', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', ppt: 'application/vnd.ms-powerpoint', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', mp4: 'video/mp4', mp3: 'audio/mpeg' })[String(ext || '').toLowerCase()] || 'application/octet-stream', b64: b64 });
         if (res && res.id) { ids[k] = res.id; copied++; } else skipped++;
       } catch (e) { skipped++; }
     }
