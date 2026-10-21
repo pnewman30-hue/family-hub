@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Newman School Tracker</title>
+<meta name="theme-color" content="#0E1B3A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="School Tracker">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<style>
+/* Layout: one column; girl tabs on top, summary tiles, class strip, filters, assignment table. */
+:root {
+  --bg: #F3F5F9; --surface: #FFFFFF; --ink: #111827; --muted: #5B6578; --line: #DDE2EA; --brand: #0E1B3A; --brand-ink: #FFFFFF;
+  --gold: #E0A800; --good: #157F3B; --good-bg: #E5F4EA; --warn: #9A5B00; --warn-bg: #FFF1D6; --bad: #B3261E; --bad-bg: #FCE8E6; --info-bg: #E8EEF9;
+  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0A1226; --surface: #121D38; --ink: #EEF2F8; --muted: #A6B1C6; --line: #26355C; --brand: #F4C430; --brand-ink: #0A1226;
+  --good: #7FE0A8; --good-bg: #133625; --warn: #FFC879; --warn-bg: #3A2A0D; --bad: #FF8A80; --bad-bg: #3D1715; --info-bg: #1A2950; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0A1226; --surface: #121D38; --ink: #EEF2F8; --muted: #A6B1C6; --line: #26355C; --brand: #F4C430; --brand-ink: #0A1226;
+  --good: #7FE0A8; --good-bg: #133625; --warn: #FFC879; --warn-bg: #3A2A0D; --bad: #FF8A80; --bad-bg: #3D1715; --info-bg: #1A2950; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+body { padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; justify-content: space-between; }
+h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
+.sub { color: var(--muted); font-size: 14px; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 14px; font-size: 14px; font-weight: 700; min-height: 40px; display: inline-flex; align-items: center; gap: 8px; }
+.btn.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.btn svg { width: 18px; height: 18px; }
+.girls { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.girl { text-align: left; border: 2px solid var(--line); background: var(--surface); border-radius: 14px; padding: 14px 16px; display: grid; gap: 4px; }
+.girl b { font-size: 20px; }
+.girl[aria-current="page"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
+.girl .flag { font-size: 13px; font-weight: 700; color: var(--muted); }
+.girl .flag.bad { color: var(--bad); }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+.tile { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 14px 16px; display: grid; gap: 2px; }
+.tile .n { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile .l { font-size: 13px; font-weight: 700; color: var(--muted); }
+.tile.bad .n { color: var(--bad); } .tile.warn .n { color: var(--warn); }
+.tile[aria-pressed="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
+.sec { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.classes { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.cls { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 12px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 8px; align-items: center; }
+.cls .nm { font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
+.cls .t { grid-column: 1; font-size: 12px; color: var(--muted); }
+.cls .g { grid-row: 1 / span 2; grid-column: 2; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.cls[aria-pressed="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
+.ga { color: var(--good); } .gb { color: var(--ink); } .gc { color: var(--warn); } .gd { color: var(--bad); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 700; min-height: 36px; }
+.chip[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.search { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 12px; font: inherit; font-size: 14px; min-height: 38px; width: 220px; max-width: 100%; }
+.share { display: flex; flex-wrap: wrap; gap: 8px; }
+.drill { padding: 16px 18px; display: grid; gap: 10px; }
+.drill .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: baseline; }
+.drill h2 { margin: 0; font-size: 22px; }
+.cats { display: flex; flex-wrap: wrap; gap: 8px; }
+.cat { background: var(--info-bg); border-radius: 10px; padding: 8px 12px; font-size: 13px; }
+.cat b { font-size: 16px; display: block; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th button { border: 0; background: none; padding: 0; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.date b { display: block; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700; }
+.pill { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .06em; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.p-missing { background: var(--bad-bg); color: var(--bad); }
+.p-due { background: var(--info-bg); color: var(--ink); }
+.p-wait { background: var(--warn-bg); color: var(--warn); }
+.p-ok { background: var(--good-bg); color: var(--good); }
+.p-nfg { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.kind { font-size: 12px; color: var(--muted); }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+.status { font-size: 13px; color: var(--muted); }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 14px; }
+@media (max-width: 760px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .hide-sm { display: none; }
+  td, th { padding: 9px 8px; }
+  .search { width: 100%; }
+}
+.print-only { display: none; }
+@media print {
+  :root { --bg: #fff; --surface: #fff; --ink: #000; --muted: #444; --line: #ccc; color-scheme: light; }
+  body { padding: 0; }
+  .no-print, .toast { display: none !important; }
+  .print-only { display: block; }
+  .panel { border: 0; }
+  table { font-size: 11px; }
+  td, th { padding: 5px 6px; }
+  .hide-sm { display: table-cell !important; }
+  tr { break-inside: avoid; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Newman School Tracker</h1>
+      <div class="sub" id="updated">Loading grades from ParentVUE…</div>
+    </div>
+    <div class="share no-print">
+      <button class="btn" data-act="refresh" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>Refresh</button>
+    </div>
+  </header>
+  <nav class="girls no-print" id="girls" aria-label="Choose a student"></nav>
+  <main id="page" class="wrap" style="gap:18px;width:100%"></main>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script>
+(function () {
+  "use strict";
+  var API = "https://script.google.com/macros/s/AKfycbxNkbjYQDpXh_BDXwxtEEnqX5JtMm3BAOi9RBpiIptpsfgy3VoU-FP3L4xf0Qo_ng81pQ/exec";
+  var CACHE = "newman-school-tracker-v1";
+  var GIRLS = { ella: { name: "Ella", school: "Lassiter High · 9th grade" }, olivia: { name: "Olivia", school: "Mabry Middle · 6th grade" } };
+  var D = null;
+  var ui = { girl: "ella", filter: "all", cls: null, q: "", sort: "desc" };
+
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function today() { return iso(new Date()); }
+  function toDate(s) { var p = String(s).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function addDays(s, n) { var d = toDate(s); d.setDate(d.getDate() + n); return iso(d); }
+  function fmt(s, o) { return s ? toDate(s).toLocaleDateString("en-US", o || { month: "short", day: "numeric" }) : ""; }
+  function wd(s) { return s ? fmt(s, { weekday: "short" }) : ""; }
+  function low(s) { return String(s || "").toLowerCase(); }
+  function shortName(n) { return String(n || "").replace(/^The\s+/i, ""); }
+  function band(p) { return p == null ? "" : p >= 90 ? "ga" : p >= 80 ? "gb" : p >= 70 ? "gc" : "gd"; }
+  function kindOf(a) {
+    var n = low(a.name || a.title), t = low(a.type || a.kind);
+    if (/review|practice|corrections?/.test(n) && !/\b(test|quiz)\s*$/.test(n)) return "Assignment";
+    if (/\b(test|exam)\b/.test(n) || /^tests?$|summative|assessment/.test(t)) return "Test";
+    if (/\bquiz/.test(n) || /^quiz/.test(t)) return "Quiz";
+    if (/project/.test(n + " " + t)) return "Project";
+    return "Assignment";
+  }
+
+  /* ---------- data model ---------- */
+  function kid() { return (D && D[ui.girl]) || { classes: [], meta: {} }; }
+  function realClasses(k) { return (k.classes || []).filter(function (c) { return c.graded || (c.assignments || []).length; }); }
+  function classGrade(c) { return c.gradedNow === false ? null : c.gradePct; }
+  function rows(k) {
+    var t = today(), out = [], seen = {};
+    realClasses(k).forEach(function (c) {
+      (c.assignments || []).forEach(function (a) {
+        var st;
+        if (a.missing || (a.pct === 0 && a.status !== "nfg")) st = "missing";
+        else if (a.status === "nfg") st = "nfg";
+        else if (a.pct != null) st = "graded";
+        else if (a.due && a.due >= t) st = "upcoming";
+        else st = "waiting";
+        if (a.due) seen[c.period + "|" + a.due] = true;
+        out.push({ cls: c, className: shortName(c.name), name: a.name, due: a.due, kind: kindOf(a), type: a.type || "", score: a.score || "", pct: a.pct, st: st, notes: a.notes || "", quarter: a.quarter || "", src: "ParentVUE" });
+      });
+    });
+    var items = (k.ctls && k.ctls.items) || [];
+    items.forEach(function (x) {
+      if (!x.due || x.due < t) return;
+      var c = realClasses(k).filter(function (c) { return c.period === x.period; })[0];
+      if (c && seen[c.period + "|" + x.due]) return;
+      out.push({ cls: c || null, className: shortName(c ? c.name : x.className), name: x.title, due: x.due, kind: kindOf({ name: x.title, type: x.kind }), type: x.kind || "", score: "", pct: null, st: "upcoming", notes: x.note || "", quarter: "", src: "Teacher post" });
+    });
+    return out;
+  }
+  function counts(list) {
+    var t = today(), wk = addDays(t, 7), c = { missing: 0, week: 0, waiting: 0 };
+    list.forEach(function (r) {
+      if (r.st === "missing") c.missing++;
+      if (r.st === "waiting") c.waiting++;
+      if (r.st === "upcoming" && r.due <= wk) c.week++;
+    });
+    return c;
+  }
+  function filtered(list) {
+    var t = today(), wk = addDays(t, 7), f = ui.filter, q = low(ui.q);
+    var out = list.filter(function (r) {
+      if (ui.cls != null && (!r.cls || r.cls.period !== ui.cls)) return false;
+      if (f === "missing" && r.st !== "missing") return false;
+      if (f === "week" && !(r.st === "upcoming" && r.due <= wk)) return false;
+      if (f === "upcoming" && r.st !== "upcoming") return false;
+      if (f === "waiting" && r.st !== "waiting") return false;
+      if (f === "graded" && r.st !== "graded") return false;
+      if (f === "tests" && !(r.kind === "Test" || r.kind === "Quiz")) return false;
+      if (q && low(r.name + " " + r.className + " " + r.type).indexOf(q) < 0) return false;
+      return true;
+    });
+    var up = f === "week" || f === "upcoming";
+    var dir = up ? 1 : ui.sort === "asc" ? 1 : -1;
+    out.sort(function (a, b) { return dir * (a.due || "").localeCompare(b.due || "") || a.className.localeCompare(b.className); });
+    return out;
+  }
+
+  /* ---------- views ---------- */
+  var FILTERS = [["all", "All"], ["missing", "Missing"], ["week", "Due This Week"], ["upcoming", "Coming Up"], ["tests", "Tests & Quizzes"], ["waiting", "Not Graded Yet"], ["graded", "Graded"]];
+  var LABEL = { missing: "MISSING", upcoming: "COMING UP", waiting: "NOT GRADED", graded: "GRADED", nfg: "NOT FOR GRADE" };
+  var PCLASS = { missing: "p-missing", upcoming: "p-due", waiting: "p-wait", graded: "p-ok", nfg: "p-nfg" };
+
+  function renderGirls() {
+    document.getElementById("girls").innerHTML = Object.keys(GIRLS).map(function (g) {
+      var k = D && D[g], c = k ? counts(rows(k)) : null;
+      var flag = !c ? "Loading…" : c.missing ? c.missing + " missing · " + c.week + " due this week" : "Nothing missing · " + c.week + " due this week";
+      return '<button class="girl" type="button" data-girl="' + g + '"' + (ui.girl === g ? ' aria-current="page"' : '') + '><b>' + GIRLS[g].name + '</b><span class="sub">' + GIRLS[g].school + '</span><span class="flag' + (c && c.missing ? " bad" : "") + '">' + flag + '</span></button>';
+    }).join("");
+  }
+
+  function render() {
+    renderGirls();
+    var page = document.getElementById("page");
+    if (!D) { page.innerHTML = '<div class="panel empty">Loading grades…</div>'; return; }
+    var k = kid(), list = rows(k), c = counts(list), classes = realClasses(k);
+    var lowN = classes.filter(function (x) { var g = classGrade(x); return g != null && g < 80; }).length;
+    var h = '<div class="print-only"><h2 style="margin:0">' + GIRLS[ui.girl].name + ' · ' + esc(viewTitle()) + '</h2><div class="sub">' + esc(fmt(today(), { weekday: "long", month: "long", day: "numeric", year: "numeric" })) + '</div></div>';
+    h += '<section class="tiles no-print" aria-label="Summary">' +
+      tile("missing", c.missing, "Missing", c.missing ? "bad" : "") +
+      tile("week", c.week, "Due this week", "") +
+      tile("waiting", c.waiting, "Not graded yet", c.waiting ? "warn" : "") +
+      '<div class="tile' + (lowN ? " warn" : "") + '"><span class="n">' + lowN + '</span><span class="l">Classes below 80</span></div></section>';
+    h += '<section class="no-print"><h2 class="sec">Classes · tap one to drill down</h2><div class="classes">' + classes.map(function (x) {
+      var g = classGrade(x), q1 = x.quarterGrades && x.currentQuarter && Object.keys(x.quarterGrades).filter(function (q) { return q !== x.currentQuarter; })[0];
+      var sub = esc(x.teacher || "") + (g == null && q1 ? ' · ' + esc(q1) + ' ' + Math.round(x.quarterGrades[q1]) : '');
+      return '<button type="button" class="cls" data-cls="' + x.period + '" aria-pressed="' + (ui.cls === x.period) + '"><span class="nm">' + esc(shortName(x.name)) + '</span><span class="t">' + sub + '</span><span class="g ' + band(g) + '">' + (g == null ? "—" : Math.round(g)) + '</span></button>';
+    }).join("") + '</div></section>';
+    if (ui.cls != null) h += drill(classes.filter(function (x) { return x.period === ui.cls; })[0], list);
+    var shown = filtered(list);
+    h += '<section class="toolbar no-print"><div class="chips" role="group" aria-label="Filter assignments">' + FILTERS.map(function (f) {
+      return '<button type="button" class="chip" data-filter="' + f[0] + '" aria-pressed="' + (ui.filter === f[0]) + '">' + f[1] + (f[0] === "missing" && c.missing ? " (" + c.missing + ")" : "") + '</button>';
+    }).join("") + '</div><input class="search" id="q" type="search" placeholder="Search assignments" value="' + esc(ui.q) + '" aria-label="Search assignments"></section>';
+    h += '<section class="toolbar no-print"><div class="sub">' + shown.length + ' of ' + list.length + ' shown · ' + esc(viewTitle()) + '</div><div class="share">' +
+      '<button type="button" class="btn" data-act="text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Text</button>' +
+      '<button type="button" class="btn" data-act="email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Email</button>' +
+      '<button type="button" class="btn" data-act="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy</button>' +
+      '<button type="button" class="btn primary" data-act="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z"/></svg>Print</button></div></section>';
+    h += '<section class="panel tablewrap">' + table(shown) + '</section>';
+    page.innerHTML = h;
+  }
+  function tile(f, n, l, cls) {
+    return '<button type="button" class="tile ' + cls + '" data-filter="' + f + '" aria-pressed="' + (ui.filter === f) + '"><span class="n">' + n + '</span><span class="l">' + l + '</span></button>';
+  }
+  function viewTitle() {
+    var f = FILTERS.filter(function (x) { return x[0] === ui.filter; })[0][1];
+    var c = ui.cls != null ? realClasses(kid()).filter(function (x) { return x.period === ui.cls; })[0] : null;
+    return (c ? shortName(c.name) + " · " : "All classes · ") + (f === "All" ? "All assignments" : f);
+  }
+  function drill(c, list) {
+    if (!c) return "";
+    var mine = list.filter(function (r) { return r.cls && r.cls.period === c.period; });
+    var cc = counts(mine), g = classGrade(c);
+    var qg = c.quarterGrades ? Object.keys(c.quarterGrades).map(function (q) { return q + ": " + (c.quarterGrades[q] == null || (q === c.currentQuarter && c.gradedNow === false) ? "no grades yet" : Math.round(c.quarterGrades[q])); }).join(" · ") : "";
+    var cats = (c.categories || []).filter(function (x) { return x.weight || x.mark != null; });
+    return '<section class="panel drill"><div class="row"><h2>' + esc(shortName(c.name)) + ' <span class="' + band(g) + '">' + (g == null ? "" : Math.round(g)) + '</span></h2><button type="button" class="btn no-print" data-cls="' + c.period + '">Show all classes</button></div>' +
+      '<div class="sub">Period ' + c.period + (c.teacher ? ' · ' + esc(c.teacher) : '') + (c.email ? ' · <span style="user-select:all">' + esc(c.email) + '</span>' : '') + (qg ? ' · ' + esc(qg) : '') + '</div>' +
+      (cats.length ? '<div class="cats">' + cats.map(function (x) { return '<div class="cat"><b class="' + band(x.mark) + '">' + (x.mark == null ? "—" : Math.round(x.mark) + "%") + '</b>' + esc(x.type) + (x.weight != null ? ' · ' + x.weight + '% of grade' : '') + '</div>'; }).join("") + '</div>' : '') +
+      '<div class="sub">' + mine.length + ' assignments · ' + cc.missing + ' missing · ' + cc.week + ' due this week · ' + cc.waiting + ' not graded yet</div></section>';
+  }
+  function table(list) {
+    if (!list.length) return '<div class="empty">' + (ui.filter === "missing" ? "Nothing missing here. Nice." : "Nothing matches this view.") + '</div>';
+    return '<table><thead><tr><th><button type="button" data-act="sort" aria-label="Sort by date">Date ' + (ui.filter === "week" || ui.filter === "upcoming" ? "↑" : ui.sort === "asc" ? "↑" : "↓") + '</button></th><th>Class</th><th>Assignment</th><th class="hide-sm">Type</th><th class="hide-sm">Score</th><th style="text-align:right">Grade</th><th>Status</th></tr></thead><tbody>' +
+      list.map(function (r) {
+        return '<tr><td class="date"><b>' + esc(wd(r.due)) + '</b>' + esc(fmt(r.due)) + '</td><td>' + esc(r.className) + '</td><td><div style="font-weight:700">' + esc(r.name) + '</div>' +
+          (r.notes ? '<div class="kind">' + esc(r.notes) + '</div>' : '') + (r.src !== "ParentVUE" ? '<div class="kind">From a teacher post</div>' : '') + '</td>' +
+          '<td class="hide-sm"><span class="kind">' + esc(r.kind) + (r.type && r.type !== r.kind ? ' · ' + esc(r.type) : '') + '</span></td><td class="hide-sm" style="white-space:nowrap">' + esc(r.score) + '</td>' +
+          '<td class="num ' + band(r.pct) + '">' + (r.pct == null ? "" : (Math.round(r.pct * 10) / 10) + "%") + '</td><td><span class="pill ' + PCLASS[r.st] + '">' + LABEL[r.st] + '</span></td></tr>';
+      }).join("") + '</tbody></table>';
+  }
+
+  /* ---------- sharing ---------- */
+  function shareText() {
+    var list = filtered(rows(kid())), name = GIRLS[ui.girl].name;
+    var lines = [name + " · " + viewTitle() + " (" + fmt(today(), { weekday: "short", month: "short", day: "numeric" }) + ")"];
+    list.slice(0, 30).forEach(function (r) {
+      lines.push("• " + (r.due ? wd(r.due) + " " + fmt(r.due) + " · " : "") + r.className + ": " + r.name + (r.pct != null ? " · " + Math.round(r.pct) + "%" : "") + (r.st === "missing" ? " · MISSING" : r.st === "waiting" ? " · not graded yet" : ""));
+    });
+    if (list.length > 30) lines.push("…and " + (list.length - 30) + " more");
+    if (!list.length) lines.push("Nothing in this view.");
+    lines.push(location.href.split("#")[0] + "#" + ui.girl);
+    return lines.join("\n");
+  }
+  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function () { t.hidden = true; }, 2200); }
+  function copy(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast("Copied"); }, function () { fallbackCopy(text); });
+    else fallbackCopy(text);
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast("Copied"); } catch (e) { toast("Select and copy the text"); }
+    document.body.removeChild(ta);
+  }
+  function share(kind) {
+    var text = shareText(), subject = GIRLS[ui.girl].name + " · " + viewTitle();
+    if (kind === "copy") return copy(text);
+    if (kind === "print") return window.print();
+    if (kind === "text") {
+      if (navigator.share && /iPhone|iPad|Android/i.test(navigator.userAgent)) { navigator.share({ title: subject, text: text }).catch(function () {}); return; }
+      location.href = "sms:?&body=" + encodeURIComponent(text); return;
+    }
+    if (kind === "email") location.href = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(text);
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-girl],[data-filter],[data-cls],[data-act]");
+    if (!el) return;
+    if (el.dataset.girl) { ui.girl = el.dataset.girl; ui.cls = null; try { history.replaceState(null, "", "#" + ui.girl); } catch (x) {} return render(); }
+    if (el.dataset.filter) { ui.filter = ui.filter === el.dataset.filter && el.classList.contains("tile") ? "all" : el.dataset.filter; return render(); }
+    if (el.dataset.cls) { var p = +el.dataset.cls; ui.cls = ui.cls === p ? null : p; render(); if (ui.cls != null) { var d = document.querySelector(".drill"); if (d) d.scrollIntoView({ block: "nearest" }); } return; }
+    var a = el.dataset.act;
+    if (a === "refresh") { load(true); return; }
+    if (a === "sort") { ui.sort = ui.sort === "asc" ? "desc" : "asc"; return render(); }
+    share(a);
+  });
+  document.addEventListener("input", function (e) {
+    if (e.target.id !== "q") return;
+    ui.q = e.target.value; var pos = e.target.selectionStart; render();
+    var q = document.getElementById("q"); q.focus(); try { q.setSelectionRange(pos, pos); } catch (x) {}
+  });
+
+  /* ---------- data loading ---------- */
+  function stamp() {
+    var t = D && D.generatedAt ? new Date(D.generatedAt) : null;
+    var s = [D && D.ella && D.ella.meta && D.ella.meta.syncedAt, D && D.olivia && D.olivia.meta && D.olivia.meta.syncedAt].filter(Boolean).sort()[0];
+    document.getElementById("updated").textContent = s ? "From ParentVUE · grades updated " + new Date(s).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + " · refreshes hourly" : "From ParentVUE";
+  }
+  var busy = false;
+  function load(manual) {
+    if (busy) return; busy = true;
+    fetch(API + "?view=family", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || d.error || !d.ella) throw new Error("bad feed");
+      D = d; store(CACHE, JSON.stringify(d)); stamp(); render(); if (manual) toast("Up to date");
+    }).catch(function () {
+      if (!D) document.getElementById("page").innerHTML = '<div class="panel empty">Can\'t reach the family sheet right now. Check the connection and tap Refresh.</div>';
+      else if (manual) toast("Couldn't refresh. Showing the saved copy.");
+    }).then(function () { busy = false; });
+  }
+  var h0 = (location.hash || "").replace("#", "");
+  if (GIRLS[h0]) ui.girl = h0;
+  try { var c = JSON.parse(store(CACHE) || "null"); if (c && c.ella) { D = c; stamp(); } } catch (e) {}
+  render(); load(false);
+  setInterval(load, 10 * 60 * 1000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) load(false); });
+})();
+</script>
+</body>
+</html>
