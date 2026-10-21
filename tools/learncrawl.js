@@ -36,20 +36,30 @@ window.__job = (async function () {
     return out;
   }
   async function coursework() {
-    const out = [];
-    const nodes = () => [...document.querySelectorAll('a.tree-branch-title')];
-    const titles = nodes().map(a => a.innerText.trim());
-    let unit = '';
-    for (let i = 0; i < titles.length; i++) {
-      const a = nodes()[i]; if (!a) continue;
-      const isTop = !!a.closest('.tree-branch-main') && a.closest('li') === a.closest('.tree-branch-main');
-      if (isTop) unit = titles[i];
-      clickable(a.parentElement.closest('[ng-click]') || a).click(); await sleep(2200);
-      const panel = document;
-      const seen = {};
-      const path = isTop ? titles[i] : unit + ' / ' + titles[i];
-      panel.querySelectorAll('[onclick*="filePreviewClick"]').forEach(e => { const m = /filePreviewClick\('([^']+)'/.exec(e.getAttribute('onclick')); if (m && !seen[m[1]]) { seen[m[1]] = 1; out.push({ src: 'Coursework', path, name: (e.innerText || '').trim().slice(0, 120) || m[1].split('/').pop(), url: m[1] }); } });
-      panel.querySelectorAll('.fr-view a[href]').forEach(e => { const h = e.href; if (/^https?:/.test(h) && !seen[h]) { seen[h] = 1; out.push({ src: 'Coursework', path, name: (e.innerText || '').trim().slice(0, 120) || h, url: h }); } });
+    // Walks the unit > week > day tree, opening collapsed weeks as it goes (they load lazily),
+    // and reads each lesson page: attached files, preview links and links in the text.
+    const out = [], got = {}, visited = {};
+    const titleOf = li => { const a = li.querySelector('a.tree-branch-title'); return a ? a.innerText.trim() : ''; };
+    const pathOf = li => { const p = []; let x = li.parentElement && li.parentElement.closest('li'); while (x) { const t = titleOf(x); if (t) p.unshift(t); x = x.parentElement && x.parentElement.closest('li'); } return p; };
+    const add = (path, name, url) => { if (!url || !/^https?:/.test(url)) return; const k = url + '|' + path; if (got[k]) return; got[k] = 1; out.push({ src: 'Coursework', path, name: String(name || url.split('/').pop()).trim().slice(0, 120), url }); };
+    const shown = t => [...document.querySelectorAll('h1,h2,h3,h4,.title,[class*=title]')].some(h => !h.closest('li') && (h.innerText || '').trim() === t);
+    for (let guard = 0; guard < 250; guard++) {
+      const lis = [...document.querySelectorAll('a.tree-branch-title')].map(a => a.closest('li')).filter(Boolean);
+      const li = lis.find(l => !visited[pathOf(l).concat(titleOf(l)).join('>')]);
+      if (!li) break;
+      const p = pathOf(li), t = titleOf(li); visited[p.concat(t).join('>')] = 1;
+      const kids = [...li.querySelectorAll('li')].filter(x => x.offsetParent !== null);
+      const exp = [...li.querySelectorAll('[ng-click*="collapsedByUser"]')].find(e => e.closest('li') === li);
+      if (exp && !kids.length) { exp.click(); await sleep(2000); }
+      const v = [...li.querySelectorAll('[ng-click*="viewNode"]')].find(e => e.closest('li') === li);
+      if (!v) continue;
+      v.click(); await sleep(1500);
+      for (let w = 0; w < 8 && !shown(t); w++) await sleep(500);
+      await sleep(800);
+      const path = p.concat(t).join(' / ');
+      document.querySelectorAll('[ng-click*="openFilePreview(file)"]').forEach(e => { const sc = angular.element(e).scope(); const f = sc && sc.file; if (f) add(path, f.fileOriginalName || f.file, f.url); });
+      document.querySelectorAll('[onclick*="filePreviewClick"]').forEach(e => { const m = /filePreviewClick\('([^']+)'/.exec(e.getAttribute('onclick')); if (m) add(path, (e.innerText || '').trim() || m[1].split('/').pop(), m[1]); });
+      document.querySelectorAll('.fr-view a[href]').forEach(e => { if (!/studentportal\.educationincites/.test(e.href)) add(path, (e.innerText || '').trim() || e.href, e.href); });
     }
     return out;
   }
@@ -73,10 +83,12 @@ window.__job = (async function () {
     try {
       window.__status = 'class ' + n;
       const img = [...document.querySelectorAll('img')].find(i => i.alt === n && i.closest('[ng-click],a,button'));
-      clickable(img).click(); await sleep(4000);
+      clickable(img).click(); await sleep(3000);
+      for (let w = 0; w < 20 && !navBtn(/^library_books/) && !navBtn(/^collections_bookmark/); w++) await sleep(500);
+      await sleep(1500);
       rec.items.push(...boardLinks());
       const cw = navBtn(/^library_books/);
-      if (cw) { clickable(cw).click(); await sleep(3500); rec.items.push(...await coursework()); }
+      if (cw) { clickable(cw).click(); await sleep(2500); for (let w = 0; w < 16 && !document.querySelector('a.tree-branch-title'); w++) await sleep(500); rec.items.push(...await coursework()); }
       const mr = navBtn(/^collections_bookmark/);
       if (mr) { clickable(mr).click(); await sleep(3500); rec.items.push(...await resources()); }
     } catch (e) { rec.err = String(e).slice(0, 200); }
@@ -84,11 +96,15 @@ window.__job = (async function () {
     await backToClasses();
   }
   window.__status = 'mapping';
-  const kid = /ella/i.test(who) ? 'ella' : /olivia/i.test(who) ? 'olivia' : '';
-  if (!kid) { window.__status = 'error: could not tell which student this is'; return; }
+  // Pick the student by the teachers on these class cards. The portal can keep the last
+  // student's session in a tab whose header still shows the other name, so the header is a tiebreak only.
   const feed = await fetch(FEED + '?view=family').then(r => r.json());
-  const classes = (feed[kid] && feed[kid].classes) || [];
   const last = t => String(t || '').trim().split(/\s+/).pop().toLowerCase();
+  const score = k => names.filter(n => { const t = last(teacherOf[n]); return t && ((feed[k] && feed[k].classes) || []).some(c => String(c.teacher || '').toLowerCase().split(/[\s,]+/).indexOf(t) >= 0); }).length;
+  const se = score('ella'), so = score('olivia');
+  const kid = se >= 2 && se > so ? 'ella' : so >= 2 && so > se ? 'olivia' : '';
+  if (!kid) { window.__status = 'error: could not tell which student this is (' + se + '/' + so + ', header ' + who + ')'; return; }
+  const classes = (feed[kid] && feed[kid].classes) || [];
   const out = [];
   names.forEach(n => {
     const items = (window.__all[n] && window.__all[n].items || []).filter(x => x.url);
@@ -105,5 +121,5 @@ window.__job = (async function () {
   while (JSON.stringify(doc).length > 47000) { const big = doc.classes.slice().sort((a, b) => b.items.length - a.items.length)[0]; big.items = big.items.slice(0, Math.floor(big.items.length * 0.8)); }
   if (!out.length) { window.__status = 'error: no classes matched'; return; }
   await fetch(FEED, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'save_learn', kid: kid, doc: doc }) });
-  window.__status = 'saved ' + kid + ' ' + out.map(c => c.period + ':' + c.items.length).join(',');
+  window.__status = 'saved ' + kid + (who && who.toLowerCase() !== kid ? ' (header said ' + who + ')' : '') + ' ' + out.map(c => c.period + ':' + c.items.length).join(',');
 })(); 'started';
