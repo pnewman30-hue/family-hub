@@ -114,12 +114,53 @@ window.__job = (async function () {
     if (!c) return;
     out.push({ period: String(c.period), ctls: n, items: items.slice(0, 120).map(x => ({ src: x.src, path: x.path, name: x.name, url: x.url.replace('https://upload.educationincites.com/gacobb/learn/resources/', '~/') })) });
   });
+  // Portal files need the portal's cookies, so each one is copied to Drive once and linked as gd:<Drive id>.
+  const post = b => fetch(FEED, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(b) }).then(r => r.json());
+  const BASE = 'https://upload.educationincites.com/';
+  const full = u => String(u || '').replace(/^~\//, BASE + 'gacobb/learn/resources/');
+  const keyOf = u => full(u).split('/').pop().replace(/[^\w.-]/g, '');
+  const ids = {};
+  try {
+    const prevItems = [].concat(...(((feed[kid] && feed[kid].learn && feed[kid].learn.classes) || []).map(c => c.items || [])));
+    const keys = [...new Set([].concat(...out.map(c => c.items), prevItems).filter(i => full(i.url).indexOf(BASE) === 0).map(i => keyOf(i.url)))];
+    for (let k = 0; k < keys.length; k += 300) Object.assign(ids, (await post({ action: 'mirror_has', keys: keys.slice(k, k + 300) })).ids || {});
+  } catch (e) {}
+  const toDrive = list => list.forEach(i => { if (full(i.url).indexOf(BASE) === 0 && ids[keyOf(i.url)]) i.url = 'gd:' + ids[keyOf(i.url)]; });
+  out.forEach(c => toDrive(c.items));
   // Merge with what is already saved, so a slow page load never drops files
   const prev = (feed[kid] && feed[kid].learn && feed[kid].learn.classes) || [];
+  prev.forEach(p => toDrive(p.items || []));
   prev.forEach(p => { const c = out.filter(x => x.period === String(p.period))[0]; if (!c) { out.push(p); return; } const seen = {}; c.items.forEach(i => { seen[i.url + '|' + i.name] = 1; }); (p.items || []).forEach(i => { if (!seen[i.url + '|' + i.name]) c.items.push(i); }); c.items = c.items.slice(0, 120); });
   let doc = { updated: new Date().toISOString(), classes: out };
   while (JSON.stringify(doc).length > 47000) { const big = doc.classes.slice().sort((a, b) => b.items.length - a.items.length)[0]; big.items = big.items.slice(0, Math.floor(big.items.length * 0.8)); }
   if (!out.length) { window.__status = 'error: no classes matched'; return; }
-  await fetch(FEED, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'save_learn', kid: kid, doc: doc }) });
-  window.__status = 'saved ' + kid + (who && who.toLowerCase() !== kid ? ' (header said ' + who + ')' : '') + ' ' + out.map(c => c.period + ':' + c.items.length).join(',');
+  const save = () => fetch(FEED, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'save_learn', kid: kid, doc: doc }) });
+  await save();
+  // Copy any portal files not yet in Drive (up to 14 minutes per run), then save again.
+  try {
+    const portal = [];
+    doc.classes.forEach(c => c.items.forEach(i => { if (full(i.url).indexOf(BASE) === 0) portal.push(i); }));
+    const t0 = Date.now(); let copied = 0, skipped = 0;
+    for (const i of portal) {
+      const k = keyOf(i.url);
+      if (ids[k]) continue;
+      if (Date.now() - t0 > 14 * 60000) break;
+      window.__status = 'copying files to Drive (' + copied + ' done)';
+      try {
+        const r = await fetch(full(i.url), { credentials: 'include' });
+        if (!r.ok) { skipped++; continue; }
+        const blob = await r.blob();
+        if (blob.size > 30 * 1024 * 1024) { skipped++; continue; }
+        const b64 = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.readAsDataURL(blob); });
+        let name = i.name; const ext = (k.match(/\.(\w+)$/) || [])[1];
+        if (ext && !new RegExp('\\.' + ext + '$', 'i').test(name)) name = name.replace(/\.\w+$/, '') + '.' + ext;
+        const res = await post({ action: 'mirror_put', kid: kid, key: k, name: name, mime: blob.type || '', b64: b64 });
+        if (res && res.id) { ids[k] = res.id; copied++; } else skipped++;
+      } catch (e) { skipped++; }
+    }
+    doc.classes.forEach(c => toDrive(c.items));
+    await save();
+    window.__copied = copied + ' copied, ' + skipped + ' skipped';
+  } catch (e) { window.__copied = 'copy error ' + String(e).slice(0, 120); }
+  window.__status = 'saved ' + kid + (who && who.toLowerCase() !== kid ? ' (header said ' + who + ')' : '') + ' ' + out.map(c => c.period + ':' + c.items.length).join(',') + ' | ' + (window.__copied || '');
 })(); 'started';
