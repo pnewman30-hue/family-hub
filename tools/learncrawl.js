@@ -98,6 +98,9 @@ window.__job = (async function () {
     if (!c) return;
     out.push({ period: String(c.period), ctls: n, items: items.slice(0, 120).map(x => ({ src: x.src, path: x.path, name: x.name, url: x.url.replace('https://upload.educationincites.com/gacobb/learn/resources/', '~/') })) });
   });
+  // Merge with what is already saved, so a slow page load never drops files
+  const prev = (feed[kid] && feed[kid].learn && feed[kid].learn.classes) || [];
+  prev.forEach(p => { const c = out.filter(x => x.period === String(p.period))[0]; if (!c) { out.push(p); return; } const seen = {}; c.items.forEach(i => { seen[i.url + '|' + i.name] = 1; }); (p.items || []).forEach(i => { if (!seen[i.url + '|' + i.name]) c.items.push(i); }); c.items = c.items.slice(0, 120); });
   let doc = { updated: new Date().toISOString(), classes: out };
   while (JSON.stringify(doc).length > 47000) { const big = doc.classes.slice().sort((a, b) => b.items.length - a.items.length)[0]; big.items = big.items.slice(0, Math.floor(big.items.length * 0.8)); }
   if (!out.length) { window.__status = 'error: no classes matched'; return; }
