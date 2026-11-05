@@ -53,7 +53,8 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
 .cls .t { grid-column: 1; font-size: 12px; color: var(--muted); }
 .cls .g { grid-row: 1 / span 2; grid-column: 2; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .cls[aria-pressed="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
-.ga { color: var(--good); } .gb { color: var(--ink); } .gc { color: var(--warn); } .gd { color: var(--bad); }
+/* Grade colors: black by default, green only for an A on a test or quiz, red for any D or F (Cobb scale: A 90+, B 80+, C 74+, D 70+, F below 70). */
+.ga { color: var(--good); } .gd { color: var(--bad); }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -128,7 +129,11 @@ details.grp .links { margin-top: 8px; }
 .al .nm { overflow-wrap: anywhere; }
 .al .nm .kind { display: block; }
 .al .num { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tq { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--bad); margin-left: 4px; }
+.navbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: flex-start; }
+.btn.nav { min-width: 0; }
+.src { font-size: 12px; color: var(--muted); font-weight: 600; }
+.al .nm .src { margin-left: 6px; }
+.srcbtn { border: 0; background: none; padding: 4px 0; font-size: 12px; color: var(--muted); text-decoration: underline; justify-self: end; }
 .none { font-size: 14px; color: var(--muted); }
 .print-only { display: none; }
 @media print {
@@ -150,7 +155,7 @@ details.grp .links { margin-top: 8px; }
   <header>
     <div>
       <h1>Newman School Tracker</h1>
-      <div class="sub" id="updated">Loading grades from ParentVUE…</div>
+      <div class="sub" id="updated">Loading grades…</div>
     </div>
     <div class="share no-print">
       <button class="btn" data-act="refresh" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>Refresh</button>
@@ -166,9 +171,9 @@ details.grp .links { margin-top: 8px; }
   "use strict";
   var API = "https://script.google.com/macros/s/AKfycbxNkbjYQDpXh_BDXwxtEEnqX5JtMm3BAOi9RBpiIptpsfgy3VoU-FP3L4xf0Qo_ng81pQ/exec";
   var CACHE = "newman-school-tracker-v1";
-  var GIRLS = { ella: { name: "Ella", school: "Lassiter High · 9th grade" }, olivia: { name: "Olivia", school: "Mabry Middle · 6th grade" } };
+  var GIRLS = { ella: { name: "Ella" }, olivia: { name: "Olivia" } };
   var D = null;
-  var ui = { girl: "ella", cls: null, q: "", view: "assign" };
+  var ui = { girl: "ella", cls: null, q: "", view: "assign", src: false };
 
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -182,7 +187,10 @@ details.grp .links { margin-top: 8px; }
   function low(s) { return String(s || "").toLowerCase(); }
   function dec(s) { return String(s == null ? "" : s).replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); }
   function shortName(n) { return String(n || "").replace(/^The\s+/i, ""); }
-  function band(p) { return p == null ? "" : p >= 90 ? "ga" : p >= 80 ? "gb" : p >= 70 ? "gc" : "gd"; }
+  // Lassiter and Mabry both use Cobb's scale (rule IHA-R): A 90-100, B 80-89, C 74-79, D 70-73, F below 70.
+  function letter(p) { return p == null ? "" : p >= 90 ? "A" : p >= 80 ? "B" : p >= 74 ? "C" : p >= 70 ? "D" : "F"; }
+  function band(p, isTest) { var L = letter(p); return L === "D" || L === "F" ? "gd" : (L === "A" && isTest) ? "ga" : ""; }
+  function nick(n) { if (/^VA\b|visual art/i.test(n)) return "Art"; return shortName(n).replace(/^(Honors|Accelerated|Adv\.?|AP)\s+/i, "").replace(/\s*&.*$/, "").replace(/\s+(I{1,3}|IV|\d+)$/i, "").trim(); }
   function kindOf(a) {
     var n = low(a.name || a.title), t = low(a.type || a.kind);
     if (/review|practice|corrections?/.test(n) && !/\b(test|quiz)\s*$/.test(n)) return "Assignment";
@@ -228,10 +236,17 @@ details.grp .links { margin-top: 8px; }
     var rest = out.filter(function (r) { return r.st !== "upcoming"; }).sort(function (a, b) { return (b.due || "").localeCompare(a.due || ""); });
     return up.concat(rest);
   }
-  function weekCount(k) {
-    var wk = addDays(today(), 7), n = 0;
-    realClasses(k).forEach(function (c) { classRows(k, c).forEach(function (r) { if (r.st === "upcoming" && r.due <= wk) n++; }); });
-    return n;
+  // Plain-words line for a girl's name block, like "Algebra test Thu · Lit work due Fri".
+  function weekLine(k) {
+    var t = today(), wk = addDays(t, 6), items = [];
+    realClasses(k).forEach(function (c) { classRows(k, c).forEach(function (r) { if (r.st === "upcoming" && r.due <= wk) items.push({ c: nick(c.name), r: r }); }); });
+    if (!items.length) return "Nothing due this week";
+    var big = function (r) { return r.kind === "Test" || r.kind === "Quiz" ? 0 : r.kind === "Project" ? 1 : 2; };
+    items.sort(function (a, b) { return big(a.r) - big(b.r) || a.r.due.localeCompare(b.r.due); });
+    var WORD = { Test: "test", Quiz: "quiz", Project: "project", Assignment: "work due" };
+    var day = function (d) { return d === t ? "today" : d === addDays(t, 1) ? "tomorrow" : wd(d); };
+    var shown = items.slice(0, 2).map(function (x) { return x.c + " " + WORD[x.r.kind] + " " + day(x.r.due); });
+    return shown.join(" · ") + (items.length > 2 ? " · +" + (items.length - 2) + " more" : "");
   }
 
   /* ---------- views ---------- */
@@ -240,9 +255,8 @@ details.grp .links { margin-top: 8px; }
 
   function renderGirls() {
     document.getElementById("girls").innerHTML = Object.keys(GIRLS).map(function (g) {
-      var k = D && D[g], n = k ? weekCount(k) : null;
-      var flag = n == null ? "Loading…" : n ? n + " coming up this week" : "Nothing posted for this week";
-      return '<button class="girl" type="button" data-girl="' + g + '"' + (ui.girl === g ? ' aria-current="page"' : '') + '><b>' + GIRLS[g].name + '</b><span class="sub">' + GIRLS[g].school + '</span><span class="flag">' + flag + '</span></button>';
+      var k = D && D[g], flag = k ? weekLine(k) : "Loading…";
+      return '<button class="girl" type="button" data-girl="' + g + '"' + (ui.girl === g ? ' aria-current="page"' : '') + '><b>' + GIRLS[g].name + '</b><span class="flag">' + esc(flag) + '</span></button>';
     }).join("");
   }
 
@@ -252,23 +266,30 @@ details.grp .links { margin-top: 8px; }
     if (!D) { page.innerHTML = '<div class="panel empty">Loading grades…</div>'; return; }
     var k = kid(), classes = realClasses(k), p = periodOf(k);
     var h = '<div class="print-only"><h2 style="margin:0">' + GIRLS[ui.girl].name + (ui.view === "res" ? " · Teacher Resources" : " · Classes") + '</h2><div class="sub">' + esc(fmt(today(), { weekday: "long", month: "long", day: "numeric", year: "numeric" })) + '</div></div>';
-    h += '<section class="toolbar no-print"><div class="sub">' + (ui.view === "res" ? "Class files and teacher posts" : (p ? esc(p.name) + " · " : "") + "Classes in period order") + '</div><button type="button" class="btn" data-view="' + (ui.view === "res" ? "assign" : "res") + '">' + (ui.view === "res" ? "Back To Classes" : "Teacher Resources (" + (resItems(k).length + learnCount(k)) + ")") + '</button></section>';
-    if (ui.view === "res") { page.innerHTML = h + resources(k, classes); return; }
-    if (!classes.length) { page.innerHTML = h + '<div class="panel empty">No classes yet.</div>'; return; }
+    h += '<section class="navbar no-print"><button type="button" class="btn nav" data-view="' + (ui.view === "res" ? "assign" : "res") + '">' + (ui.view === "res" ? "\u2039 Back to Classes" : "Teacher Resources (" + (resItems(k).length + learnCount(k)) + ") \u203a") + '</button><div class="sub">' + (ui.view === "res" ? "Class files and teacher posts" : (p ? esc(p.name) + " · " : "") + "Classes in period order") + '</div></section>';
+    if (ui.view === "res") { page.innerHTML = h + resources(k, classes) + sourceFoot(); return; }
+    if (!classes.length) { page.innerHTML = h + '<div class="panel empty">No classes yet.</div>' + sourceFoot(); return; }
     h += classes.map(function (c) { return classCard(k, c); }).join("");
-    page.innerHTML = h;
+    page.innerHTML = h + sourceFoot();
   }
   function classCard(k, c) {
     var g = classGrade(c), list = classRows(k, c);
-    var gTxt = g == null ? '<span class="nog">No grades yet</span>' : '<span class="' + band(g) + '">' + Math.round(g) + '</span>';
+    var gTxt = g == null ? '<span class="nog">No grades yet</span>' : '<span class="' + band(g, false) + '">' + Math.round(g) + '</span>';
     return '<section class="panel cc"><div class="cc-hd"><div><div class="per">Period ' + esc(c.period) + '</div><h2>' + esc(dec(shortName(c.name))) + '</h2><div class="sub">' + esc(c.teacher || "") + '</div></div><div class="cg">' + gTxt + '</div></div>' +
       (list.length ? '<ul class="al">' + list.map(rowHtml).join("") + '</ul>' : '<div class="none">Nothing posted yet this grading period.</div>') + '</section>';
   }
   function rowHtml(r) {
     var test = r.kind === "Test" || r.kind === "Quiz";
-    var right = r.st === "graded" ? '<span class="num ' + band(r.pct) + '">' + (Math.round(r.pct * 10) / 10) + '%</span>' : '<span class="pill ' + PCLASS[r.st] + '">' + LABEL[r.st] + '</span>';
+    var right = r.st === "graded" ? '<span class="num ' + band(r.pct, test) + '">' + (Math.round(r.pct * 10) / 10) + '%</span>' : '<span class="pill ' + PCLASS[r.st] + '">' + LABEL[r.st] + '</span>';
     return '<li class="' + (r.st === "upcoming" ? "up" : "") + '"><span class="d"><b>' + esc(wd(r.due)) + '</b> ' + esc(fmt(r.due)) + '</span><span class="nm">' + esc(r.name) +
-      (test ? ' <span class="tq">' + r.kind + '</span>' : '') + (r.src !== "ParentVUE" ? '<span class="kind">From a teacher post</span>' : '') + '</span>' + right + '</li>';
+      (ui.src ? '<span class="src">' + esc(r.src) + '</span>' : '') + '</span>' + right + '</li>';
+  }
+
+  /* ---------- source link (for checking; delete this function, its calls and the "source" click to remove) ---------- */
+  function sourceFoot() {
+    var s = [D && D.ella && D.ella.meta && D.ella.meta.syncedAt, D && D.olivia && D.olivia.meta && D.olivia.meta.syncedAt].filter(Boolean).sort()[0];
+    var note = ui.src ? '<div class="src">Grades and assignments come from ParentVUE' + (s ? ' (updated ' + esc(new Date(s).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })) + ', refreshes hourly)' : '') + '. Teacher posts come from CTLSParent. Class files come from CTLS Learn. "Open post" links ask for a CTLSParent sign-in.</div>' : '';
+    return '<div class="no-print" style="display:grid;gap:4px">' + note + '<button type="button" class="srcbtn" data-act="source" aria-pressed="' + ui.src + '">' + (ui.src ? "Hide source" : "Source") + '</button></div>';
   }
 
   /* ---------- teacher resources ---------- */
@@ -304,7 +325,7 @@ details.grp .links { margin-top: 8px; }
       if (na !== nb) return nb - na; return a.localeCompare(b);
     });
     var open = !!q || order.length <= 2;
-    return '<section class="panel learn"><div class="hd"><b>From CTLS Learn</b><span class="small">' + items.length + (items.length === 1 ? ' file or link' : ' files and links') + ' · newest units first</span></div>' +
+    return '<section class="panel learn"><div class="hd"><b>Class files</b><span class="small">' + items.length + (items.length === 1 ? ' file or link' : ' files and links') + ' · newest units first</span></div>' +
       order.map(function (g, i) {
         return '<details class="grp"' + (open || i === 0 ? ' open' : '') + '><summary>' + esc(g) + ' <span>(' + groups[g].length + ')</span></summary><div class="links">' +
           groups[g].map(function (it) {
@@ -327,16 +348,15 @@ details.grp .links { margin-top: 8px; }
       var posts = byClass[c.period] || [], lc = learnFor(k, c.period), lb = lc ? learnBlock(k, lc) : "";
       if (!posts.length && !lb) return;
       shownAny = true;
-      h += '<section class="res-class"><h3>' + esc(shortName(c.name)) + '<span>' + esc(c.teacher || "") + (lc ? ' · ' + (lc.items || []).length + ((lc.items || []).length === 1 ? ' CTLS Learn file' : ' CTLS Learn files') : '') + ' · ' + posts.length + (posts.length === 1 ? " teacher post" : " teacher posts") + '</span></h3>' + lb +
+      h += '<section class="res-class"><h3>' + esc(shortName(c.name)) + '<span>' + esc(c.teacher || "") + (lc ? ' · ' + (lc.items || []).length + ((lc.items || []).length === 1 ? ' class file' : ' class files') : '') + ' · ' + posts.length + (posts.length === 1 ? " teacher post" : " teacher posts") + '</span></h3>' + lb +
         posts.map(function (p) {
           var links = (p.links || []).slice().sort(function (a, b) { return (a.kind === "post") - (b.kind === "post"); });
-          return '<article class="panel post"><div class="meta">' + esc(wd(p.date) + " " + fmt(p.date)) + ' · ' + esc(p.teacher) + ' · CTLSParent post</div><div class="t">' + esc(p.title) + '</div>' + (p.summary ? '<div class="s">' + esc(p.summary) + (p.summary.length >= 220 ? '…' : '') + '</div>' : '') +
+          return '<article class="panel post"><div class="meta">' + esc(wd(p.date) + " " + fmt(p.date)) + ' · ' + esc(p.teacher) + (ui.src ? ' · CTLSParent post' : '') + '</div><div class="t">' + esc(p.title) + '</div>' + (p.summary ? '<div class="s">' + esc(p.summary) + (p.summary.length >= 220 ? '…' : '') + '</div>' : '') +
             (links.length ? '<div class="links">' + links.map(function (l) { return '<a class="lnk' + (l.kind === "post" ? " post-l" : "") + '" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + (ICON[l.kind] || ICON.link) + esc(l.label || "Open") + '</a>'; }).join("") + '</div>' : '') + '</article>';
         }).join("") + '</section>';
     });
     if (!shownAny) return h + '<div class="panel empty">' + (ui.q ? "Nothing matches this search." : "No teacher resources here yet.") + '</div>';
-    var when = k.learn && k.learn.updated ? new Date(k.learn.updated).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
-    return h + '<div class="status">CTLS Learn files are the class folders, unit pages and class-board links teachers post' + (when ? ' (checked ' + esc(when) + ')' : '') + '. Teacher posts come from CTLSParent. Files open directly; "Open post in CTLSParent" asks for your CTLSParent sign-in.</div>';
+    return h;
   }
 
   /* ---------- sharing ---------- */
@@ -392,6 +412,7 @@ details.grp .links { margin-top: 8px; }
     if (el.dataset.girl) { ui.girl = el.dataset.girl; try { history.replaceState(null, "", "#" + ui.girl); } catch (x) {} return render(); }
     var a = el.dataset.act;
     if (a === "refresh") { load(true); return; }
+    if (a === "source") { ui.src = !ui.src; render(); return; }
     share(a);
   });
   document.addEventListener("input", function (e) {
@@ -404,7 +425,7 @@ details.grp .links { margin-top: 8px; }
   function stamp() {
     var t = D && D.generatedAt ? new Date(D.generatedAt) : null;
     var s = [D && D.ella && D.ella.meta && D.ella.meta.syncedAt, D && D.olivia && D.olivia.meta && D.olivia.meta.syncedAt].filter(Boolean).sort()[0];
-    document.getElementById("updated").textContent = s ? "From ParentVUE · grades updated " + new Date(s).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + " · refreshes hourly" : "From ParentVUE";
+    document.getElementById("updated").textContent = s ? "Grades updated " + new Date(s).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
   }
   var busy = false;
   function load(manual) {
