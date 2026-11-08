@@ -2,8 +2,11 @@
 // Run in the Incite Student Portal tab (opened from CTLSParent > student > CTLS Learn), on My Classes.
 // Collects class-board links, coursework files and My Resources files, then saves them to the
 // Family Hub Sheet Feed (save_learn). Sets window.__status to 'saved ...' when finished.
+// The feed's link is private and is not kept in this public file: set window.__FEED to it before
+// running this script (the scheduled CTLS Learn refresh does this).
 window.__job = (async function () {
-  const FEED = 'https://script.google.com/macros/s/AKfycbxNkbjYQDpXh_BDXwxtEEnqX5JtMm3BAOi9RBpiIptpsfgy3VoU-FP3L4xf0Qo_ng81pQ/exec';
+  const FEED = String(window.__FEED || '');
+  if (!/^https:\/\/script\.google(usercontent)?\.com\/\S*$/.test(FEED)) { window.__status = 'error: family feed link not set (window.__FEED)'; return; }
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const clickable = e => e.closest('a,button,[ng-click],[role=button]') || e;
   const navBtn = re => [...document.querySelectorAll('a,button,[ng-click]')].find(e => re.test((e.innerText || '').trim()));

@@ -85,6 +85,12 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
 .p-nfg { background: transparent; color: var(--muted); border: 1px solid var(--line); }
 .kind { font-size: 12px; color: var(--muted); }
 .empty { padding: 28px; text-align: center; color: var(--muted); }
+.empty .linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; cursor: pointer; }
+.connect { padding: 18px 20px; display: grid; gap: 10px; }
+.connect h2 { margin: 0; font-size: 18px; }
+.connect p { margin: 0; color: var(--muted); }
+.connect form { display: flex; gap: 8px; flex-wrap: wrap; }
+.connect .search { flex: 1 1 260px; width: auto; }
 .status { font-size: 13px; color: var(--muted); }
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 14px; }
 @media (max-width: 760px) {
@@ -163,13 +169,25 @@ details.grp .links { margin-top: 8px; }
     </div>
   </header>
   <nav class="girls no-print" id="girls" aria-label="Choose a student"></nav>
+  <section class="panel connect no-print" id="connect" hidden>
+    <h2>Connect This Device</h2>
+    <p id="connectMsg"></p>
+    <form id="connectForm" autocomplete="off">
+      <input class="search" id="connectLink" type="text" inputmode="url" placeholder="Paste the setup link" aria-label="Family setup link" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="btn primary" type="submit">Connect</button>
+    </form>
+  </section>
   <main id="page" class="wrap" style="gap:18px;width:100%"></main>
 </div>
 <div class="toast" id="toast" hidden></div>
 <script>
 (function () {
   "use strict";
-  var API = "https://script.google.com/macros/s/AKfycbxNkbjYQDpXh_BDXwxtEEnqX5JtMm3BAOi9RBpiIptpsfgy3VoU-FP3L4xf0Qo_ng81pQ/exec";
+  // The family sheet's link is private, so it is never written into this public page. Each device
+  // saves it once, from the family setup link (…/school/#api=…) or the Connect box. The storage names
+  // are shared with the Family Hub app on the same site, so connecting one connects both.
+  var LINK = "newman_school_script_url", PASS = "newman_school_script_key";
+  var FEED_RE = /^https:\/\/script\.google(usercontent)?\.com\/\S*$/;
   var CACHE = "newman-school-tracker-v1";
   var GIRLS = { ella: { name: "Ella" }, olivia: { name: "Olivia" } };
   var D = null;
@@ -413,6 +431,7 @@ details.grp .links { margin-top: 8px; }
     var a = el.dataset.act;
     if (a === "refresh") { load(true); return; }
     if (a === "source") { ui.src = !ui.src; render(); return; }
+    if (a === "connect") { showConnect(true); document.getElementById("connectLink").focus(); return; }
     share(a);
   });
   document.addEventListener("input", function (e) {
@@ -427,17 +446,59 @@ details.grp .links { margin-top: 8px; }
     var s = [D && D.ella && D.ella.meta && D.ella.meta.syncedAt, D && D.olivia && D.olivia.meta && D.olivia.meta.syncedAt].filter(Boolean).sort()[0];
     document.getElementById("updated").textContent = s ? "Grades updated " + new Date(s).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
   }
-  var busy = false;
-  function load(manual) {
-    if (busy) return; busy = true;
-    fetch(API + "?view=family", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
-      if (!d || d.error || !d.ella) throw new Error("bad feed");
-      D = d; store(CACHE, JSON.stringify(d)); stamp(); render(); if (manual) toast("Up to date");
-    }).catch(function () {
-      if (!D) document.getElementById("page").innerHTML = '<div class="panel empty">Can\'t reach the family sheet right now. Check the connection and tap Refresh.</div>';
-      else if (manual) toast("Couldn't refresh. Showing the saved copy.");
-    }).then(function () { busy = false; });
+  var busy = false, gen = 0;
+  // Reads a setup link (…#api=<link>&key=<passcode>, or ?api=…) or a bare Apps Script link
+  function readSetup(text) {
+    var s = String(text || "").trim(), m = /[#?&]api=([^&#\s]+)/.exec(s), api = "", key = "";
+    try {
+      if (m) { api = decodeURIComponent(m[1]); var k = /[#?&]key=([^&#\s]*)/.exec(s); if (k) key = decodeURIComponent(k[1]); }
+      else api = s;
+    } catch (e) { return null; }
+    return FEED_RE.test(api) ? { api: api, key: key } : null;
   }
+  function feedUrl() {
+    var api = store(LINK) || "", key = store(PASS) || "";
+    if (!FEED_RE.test(api)) return "";
+    return api + (api.indexOf("?") >= 0 ? "&" : "?") + "view=family" + (key ? "&key=" + encodeURIComponent(key) : "");
+  }
+  function showConnect(broken) {
+    document.getElementById("connectMsg").textContent = broken
+      ? "This device's link to the family sheet has stopped working. Paste the new family setup link to reconnect."
+      : "Paste the family setup link to load the girls' classes. Each phone or computer needs this only once.";
+    document.getElementById("connect").hidden = false;
+    if (!D) { document.getElementById("page").innerHTML = ""; document.getElementById("updated").textContent = "Not connected yet"; }
+  }
+  function hideConnect() { document.getElementById("connect").hidden = true; }
+  function load(manual, force) {
+    if (busy && !force) return;
+    var url = feedUrl();
+    if (!url) { showConnect(false); return; }
+    busy = true;
+    var mine = ++gen;
+    fetch(url, { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
+      if (mine !== gen) return;
+      if (d && d.error && /passcode|unauthori[sz]ed/i.test(d.error)) { var x = new Error("locked"); x.locked = true; throw x; }
+      if (!d || d.error || !d.ella) throw new Error("bad feed");
+      D = d; store(CACHE, JSON.stringify(d)); hideConnect(); stamp(); render(); if (manual) toast("Up to date");
+    }).catch(function (err) {
+      if (mine !== gen) return;
+      if (err && err.locked) showConnect(true);
+      else if (!D) document.getElementById("page").innerHTML = '<div class="panel empty">Can\'t reach the family sheet right now. Check the connection and tap Refresh. If it keeps happening, <button type="button" class="linkbtn" data-act="connect">reconnect this device</button>.</div>';
+      else if (manual) toast("Couldn't refresh. Showing the saved copy.");
+    }).then(function () { if (mine === gen) busy = false; });
+  }
+  document.getElementById("connectForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var box = document.getElementById("connectLink"), s = readSetup(box.value);
+    if (!s) { document.getElementById("connectMsg").textContent = "That isn't the family setup link. Copy the whole link and paste it again."; return; }
+    store(LINK, s.api); store(PASS, s.key); box.value = ""; hideConnect();
+    if (!D) { document.getElementById("page").innerHTML = '<div class="panel empty">Loading grades…</div>'; document.getElementById("updated").textContent = "Loading grades…"; }
+    load(true, true);
+  });
+  // A setup link connects this device once, then is removed from the address bar
+  var setup = readSetup(location.hash) || readSetup(location.search);
+  if (setup) { store(LINK, setup.api); store(PASS, setup.key); }
+  if (/[#?&](api|key)=/.test(location.hash + location.search)) { try { history.replaceState(null, "", location.pathname); } catch (x) {} }
   var h0 = (location.hash || "").replace("#", "");
   if (GIRLS[h0]) ui.girl = h0;
   try { var c = JSON.parse(store(CACHE) || "null"); if (c && c.ella) { D = c; stamp(); } } catch (e) {}
